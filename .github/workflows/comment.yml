@@ -5,6 +5,7 @@ on:
     workflows:
       - 📝 Check Conventional Commit
       - ✨ Check Conventional Commit Title
+      - 🧪 Test
     types:
       - completed
 
