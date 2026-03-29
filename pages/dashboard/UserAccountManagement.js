@@ -1,20 +1,20 @@
-import dynamic from "next/dynamic";
+import dynamic from "next/dynamic"
 
-const ContentsView = dynamic(() => import("../../components/dashboard/UserAccountManagementComponent"), { ssr: false });
+const ContentsView = dynamic(
+  () => import("../../components/dashboard/UserAccountManagementComponent"),
+  { ssr: false },
+)
 
 export async function getServerSideProps() {
-    return {
-        props: {
-            dashboard: true
-        }
-    }
+  return {
+    props: {
+      dashboard: true,
+    },
+  }
 }
 
 function UserAccountManagement() {
-    return (
-        <>
-        <ContentsView /></>
-    );
+  return <ContentsView />
 }
 
-export default UserAccountManagement;
+export default UserAccountManagement

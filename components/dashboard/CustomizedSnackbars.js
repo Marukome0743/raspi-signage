@@ -1,13 +1,12 @@
-import React from "react";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
+import MuiAlert from "@mui/material/Alert"
+import Snackbar from "@mui/material/Snackbar"
 
 function Alert(props) {
-  return <MuiAlert elevation={6} variant="filled" {...props} />;
+  return <MuiAlert elevation={6} variant="filled" {...props} />
 }
 
-const CustomizedSnackbars = props => {
-  const { open, handleClose, type, message } = props;
+const CustomizedSnackbars = (props) => {
+  const { open, handleClose, type, message } = props
 
   return (
     <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
@@ -15,7 +14,7 @@ const CustomizedSnackbars = props => {
         {message}
       </Alert>
     </Snackbar>
-  );
-};
+  )
+}
 
-export default CustomizedSnackbars;
+export default CustomizedSnackbars

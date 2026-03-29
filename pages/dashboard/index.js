@@ -1,22 +1,21 @@
-import dynamic from "next/dynamic";
+import dynamic from "next/dynamic"
 
-const Upload = dynamic(() => import("../../components/dashboard/UplaodContents"), { ssr: false })
+const Upload = dynamic(
+  () => import("../../components/dashboard/UplaodContents"),
+  { ssr: false },
+)
 
 export async function getServerSideProps() {
-
   return {
     props: {
       dashboard: true,
-      areaDisplay: true
-    }
-  };
+      areaDisplay: true,
+    },
+  }
 }
 
 function UploadContent() {
-
-  return (
-    <Upload />
-  );
+  return <Upload />
 }
 
-export default UploadContent;
+export default UploadContent

@@ -1,21 +1,21 @@
-import dynamic from "next/dynamic";
+import dynamic from "next/dynamic"
 
-const ContentsView = dynamic(() => import("../../components/dashboard/ViewPostionComponent"), { ssr: false });
+const ContentsView = dynamic(
+  () => import("../../components/dashboard/ViewPostionComponent"),
+  { ssr: false },
+)
 
 export async function getServerSideProps() {
-    return {
-        props: {
-            dashboard: true,
-            areaDisplay: true
-        }
-    }
+  return {
+    props: {
+      dashboard: true,
+      areaDisplay: true,
+    },
+  }
 }
 
 function ViewPosition() {
-    return (
-        <>
-        <ContentsView /></>
-    );
+  return <ContentsView />
 }
 
-export default ViewPosition;
+export default ViewPosition

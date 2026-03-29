@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from 'firebase/app'
-import { getAnalytics } from 'firebase/analytics'
+import { getAnalytics } from "firebase/analytics"
+import { getApps, initializeApp } from "firebase/app"
 
 export const createFirebaseApp = () => {
   const clientCredentials = {
@@ -15,13 +15,13 @@ export const createFirebaseApp = () => {
   if (getApps().length <= 0) {
     const app = initializeApp(clientCredentials)
     // Check that `window` is in scope for the analytics module!
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Enable analytics. https://firebase.google.com/docs/analytics/get-started
-      if ('measurementId' in clientCredentials) {
+      if ("measurementId" in clientCredentials) {
         getAnalytics()
       }
     }
-    
+
     return app
   }
 }

@@ -1,27 +1,28 @@
-import dynamic from "next/dynamic";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from "@mui/material/styles"
+import dynamic from "next/dynamic"
 
-const ContentsView = dynamic(() => import("../../components/dashboard/PasswordResetComponent"), { ssr: false });
+const ContentsView = dynamic(
+  () => import("../../components/dashboard/PasswordResetComponent"),
+  { ssr: false },
+)
 
 export async function getServerSideProps() {
-    return {
-        props: {
-            dashboard: true,
-            isPass: true,
-        }
-    }
+  return {
+    props: {
+      dashboard: true,
+      isPass: true,
+    },
+  }
 }
 
-const theme = createTheme();
+const theme = createTheme()
 
 function PasswordReset() {
-
-
   return (
     <ThemeProvider theme={theme}>
-       <ContentsView />
+      <ContentsView />
     </ThemeProvider>
-  );
+  )
 }
 
-export default PasswordReset;
+export default PasswordReset
