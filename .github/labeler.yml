@@ -1,0 +1,38 @@
+🍱asset:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.avif", "**/*.ico", "**/*.png", "**/*.svg"]
+
+🐛bug:
+  - head-branch: ["^fix", "fix"]
+
+♻️ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**/*.yml"
+
+⚙️config:
+  - changed-files:
+      - any-glob-to-any-file: "*config.*"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ["package-lock.json", "package.json"]
+
+📝documentation:
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.md"]
+
+🚀enhancement:
+  - changed-files:
+      - any-glob-to-any-file: ["components/**", "pages/**", "src/**", "utilities/**"]
+
+🪸git:
+  - changed-files:
+      - any-glob-to-any-file: [".gitattributes", ".gitignore"]
+
+🧰infrastructure:
+  - changed-files:
+      - any-glob-to-any-file: [".editorconfig", "biome.json"]
+
+🎨style:
+  - changed-files:
+      - any-glob-to-any-file: ["styles/**", "**/*.css"]
