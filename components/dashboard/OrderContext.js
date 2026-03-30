@@ -1,7 +1,6 @@
-import { getAuth, onAuthStateChanged } from "@firebase/auth"
 import { useRouter } from "next/router"
 import { createContext, useContext, useEffect, useState } from "react"
-import { createFirebaseApp } from "../../src/firebase/clientApp"
+import { supabase } from "../../src/supabase/client"
 
 const OrderContext = createContext({
   currentUser: undefined,
@@ -13,7 +12,6 @@ export function useOrderContext() {
 
 export function OrderProvider({ children }) {
   const [orderId, setOrderId] = useState()
-  //    const [isLogin, setIsLogin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false)
   const [currentUser, setCurrentUser] = useState(undefined)
   const [uid, setUid] = useState(undefined)
@@ -23,26 +21,21 @@ export function OrderProvider({ children }) {
 
   const router = useRouter()
   const isAvailableForViewing = router.pathname === "/dashboard/Login"
-  const _value = {
-    currentUser,
-  }
-  const firebaseApp = createFirebaseApp()
-  const auth = getAuth(firebaseApp)
 
-  // authはnullの可能性があるので、useEffectの第二引数にauthを指定しておく
   useEffect(() => {
-    const authStateChanged = onAuthStateChanged(auth, async (user) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null
       setCurrentUser(user)
-      //       console.log(auth);
       if (!user && !isAvailableForViewing) {
         router.push("/dashboard/Login")
       }
     })
     return () => {
-      //       console.log(auth);
-      authStateChanged()
+      subscription.unsubscribe()
     }
-  }, [auth, isAvailableForViewing, router.push])
+  }, [isAvailableForViewing, router])
 
   return (
     <OrderContext.Provider

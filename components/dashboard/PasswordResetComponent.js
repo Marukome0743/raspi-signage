@@ -1,4 +1,3 @@
-import { getAuth, signOut } from "@firebase/auth"
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined"
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
@@ -11,6 +10,7 @@ import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import { supabase } from "../../src/supabase/client"
 import {
   checkAccountPassKey,
   getAccountDataClient,
@@ -80,8 +80,7 @@ function PasswordResetComponent() {
           nowPassword,
           newPassword,
         )
-        const auth = getAuth()
-        await signOut(auth)
+        const _auth = await supabase.auth.signOut()
         setUid("")
         setUserName("")
         setProgress(false)

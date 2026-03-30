@@ -1,21 +1,9 @@
-import {
-  arrayUnion,
-  collection,
-  getDocs,
-  getFirestore,
-  query,
-  where,
-} from "firebase/firestore"
-import {
-  getDownloadURL,
-  getStorage,
-  ref,
-  uploadBytesResumable,
-} from "firebase/storage"
-import { createFirebaseApp } from "../src/firebase/clientApp"
+import { supabase } from "../src/supabase/client"
 import { updateContentOrder } from "./setContentData"
 
-// コンテンツ登録時のfirebase接続等処理
+const BUCKET = "signage-contents"
+
+// コンテンツ登録時のsupabase接続等処理
 export const postContent = async (
   docId,
   content,
@@ -23,66 +11,58 @@ export const postContent = async (
   duration,
   _callbackfn = undefined,
 ) => {
-  if (content.name) {
-    const app = createFirebaseApp()
-    const storage = getStorage(app)
-    const db = getFirestore(app)
-    const q = query(
-      collection(db, "contents"),
-      where("delete", "==", false),
-      where("orderId", "==", docId),
-    )
-    const contentDocs = await getDocs(q)
-    if (!contentDocs) {
-      return null
-    }
-    const contents = contentDocs.docs.map((doc) => doc.data())
-    console.log(ref)
-    console.log(storage)
-    console.log(contents[0].areaId.toString())
-    //        const storageRef = firebase.storage().ref();
-    const storageRef = ref(storage, `${contents[0].areaId}`)
-    const fullPath = content.name
-    const uploadRef = ref(storageRef, fullPath)
-    let viewTime = 2000
-    if (duration !== 0) {
-      viewTime = duration
-    }
-    const uploadTask = uploadBytesResumable(uploadRef, content)
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        // Observe state change events such as progress, pause, and resume
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        console.log(`Upload is ${progress}% done`)
-        switch (snapshot.state) {
-          case "paused":
-            console.log("Upload is paused")
-            break
-          case "running":
-            console.log("Upload is running")
-            break
-        }
-      },
-      (_error) => {
-        // Handle unsuccessful uploads
-      },
-      () => {
-        // Handle successful uploads on complete
-        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          updateContentOrder(docId, {
-            hidden: arrayUnion({
-              fileName: content.name,
-              path: downloadURL,
-              type: type,
-              viewTime: viewTime,
-            }),
-          })
-        })
-      },
-    )
+  if (!content.name) {
+    return
   }
+
+  const { data: contentsData } = await supabase
+    .from("contents")
+    .select("area_id")
+    .eq("deleted", false)
+    .eq("order_id", docId)
+    .limit(1)
+    .single()
+  if (!contentsData) {
+    return
+  }
+
+  const areaId = contentsData.area_id
+  const filePath = `${areaId}/${content.name}`
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(filePath, content, { upsert: true })
+  if (error) {
+    console.log("Upload error:", error)
+    return
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(filePath)
+
+  let viewTime = 2000
+  if (duration !== 0) {
+    viewTime = duration
+  }
+
+  // Get current order to append to hidden
+  const { data: order } = await supabase
+    .from("orders")
+    .select("hidden")
+    .eq("id", docId)
+    .single()
+
+  const currentHidden = order?.hidden ?? []
+  await updateContentOrder(docId, {
+    hidden: [
+      ...currentHidden,
+      {
+        fileName: content.name,
+        path: publicUrl,
+        type,
+        viewTime,
+      },
+    ],
+  })
 }

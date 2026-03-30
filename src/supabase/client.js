@@ -1,0 +1,23 @@
+import { createClient } from "@supabase/supabase-js"
+
+let _supabase = null
+
+export const getSupabase = () => {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    )
+  }
+  return _supabase
+}
+
+// For backward compatibility - lazy getter
+export const supabase = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      return getSupabase()[prop]
+    },
+  },
+)

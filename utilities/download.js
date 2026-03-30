@@ -1,20 +1,19 @@
-import { getDownloadURL, getStorage, listAll, ref } from "firebase/storage"
-import { createFirebaseApp } from "../firebase/clientApp"
+import { supabase } from "../src/supabase/client"
+
+const BUCKET = "signage-contents"
 
 export const downLoadURLList = async ({ areaId }) => {
-  const urlList = []
-
-  const app = createFirebaseApp()
-
-  const storage = getStorage(app)
-  const storageRef = ref(storage, areaId)
-  const refList = await (await listAll(storageRef)).items
-  for (const ref of refList) {
-    await getDownloadURL(ref)
-      .then((url) => {
-        urlList.push(url)
-      })
-      .catch((err) => alert(err))
+  const { data: files, error } = await supabase.storage
+    .from(BUCKET)
+    .list(areaId)
+  if (error || !files) {
+    return []
   }
-  return urlList
+
+  return files.map((file) => {
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(BUCKET).getPublicUrl(`${areaId}/${file.name}`)
+    return publicUrl
+  })
 }

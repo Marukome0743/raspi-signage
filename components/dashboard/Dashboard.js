@@ -1,5 +1,4 @@
 "use client"
-import { getAuth, signOut } from "@firebase/auth"
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
 import LogoutIcon from "@mui/icons-material/Logout"
 import MenuIcon from "@mui/icons-material/Menu"
@@ -23,6 +22,7 @@ import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import { useRouter } from "next/router"
 import * as React from "react"
+import { supabase } from "../../src/supabase/client"
 import { getContentList } from "../../utilities/getContentDataClient"
 import { MainListItems } from "./ListItems"
 import { OrderProvider, useOrderContext } from "./OrderContext"
@@ -161,8 +161,8 @@ function DashboardContent({
 
   const onClickLogout = async () => {
     setName("")
-    const auth = getAuth()
-    await signOut(auth)
+    await supabase.auth
+      .signOut()
       .then(() => {
         sessionStorage.clear()
         setUid("")

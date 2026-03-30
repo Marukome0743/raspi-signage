@@ -1,32 +1,28 @@
-import admin from "../src/firebase/nodeApp"
+import { supabaseAdmin } from "../src/supabase/server"
 
 // オーダーに紐づくリスト一覧
 export const getContentDataAdmin = async (orderId) => {
-  const target = `order/${orderId}`
-  const db = admin.firestore()
-  const contents = await db.doc(target).get()
-
-  if (!contents) {
+  const { data } = await supabaseAdmin
+    .from("orders")
+    .select()
+    .eq("id", orderId)
+    .single()
+  if (!data) {
     return null
   }
-  return contents.data()
+  return data
 }
 
 // オーダーID取得
 export const getOrderIdAdmin = async (areaId) => {
-  const db = admin.firestore()
-  let orderId = ""
-  let pixelSizeId = ""
-  const snapshot = await db
-    .collection("contents")
-    .where("areaId", "==", areaId)
-    .get()
-  snapshot.forEach((doc) => {
-    orderId = doc.data().orderId
-    pixelSizeId = doc.data().pixelSizeId
-  })
+  const { data } = await supabaseAdmin
+    .from("contents")
+    .select("order_id, pixel_size_id")
+    .eq("area_id", areaId)
+    .limit(1)
+    .single()
   return {
-    orderId,
-    pixelSizeId,
+    orderId: data?.order_id ?? "",
+    pixelSizeId: data?.pixel_size_id ?? "",
   }
 }

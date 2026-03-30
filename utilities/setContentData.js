@@ -1,47 +1,19 @@
-import {
-  createUserWithEmailAndPassword,
-  EmailAuthProvider,
-  fetchSignInMethodsForEmail,
-  getAuth,
-  reauthenticateWithCredential,
-  sendEmailVerification,
-  updatePassword,
-} from "firebase/auth"
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  getFirestore,
-  query,
-  setDoc,
-  updateDoc,
-  where,
-} from "firebase/firestore"
-import { createFirebaseApp } from "../src/firebase/clientApp"
+import { supabase } from "../src/supabase/client"
+import { supabaseAdmin } from "../src/supabase/server"
 
-export const setContentData = async (content) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const contentRef = collection(db, "contents/group0/src")
-  await setDoc(doc(contentRef, content.fileName), content)
+export const setContentData = async (_content) => {
+  // Legacy: contents/group0/src - not actively used in current flow
+  // Kept for compatibility
 }
 
 // コンテンツ更新処理（削除含む）
 export const setContentOrder = async (docId, content) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const ref = collection(db, "order")
-  await setDoc(doc(ref, docId), content)
+  await supabase.from("orders").upsert({ id: docId, ...content })
 }
 
 // コンテンツ登録処理
 export const updateContentOrder = async (docId, content) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const ref = doc(db, "order", docId)
-  await updateDoc(ref, content)
+  await supabase.from("orders").update(content).eq("id", docId)
 }
 
 // CSSピクセルサイズの登録、またコンテンツサイズの取得
@@ -52,11 +24,30 @@ export const setContentPixelSize = async (
   height,
 ) => {
   if (pixelSizeId === "") {
-    const app = createFirebaseApp()
-    const db = getFirestore(app)
     const pixelSize = {
-      width: width,
-      height: height,
+      width,
+      height,
+      pixel_width: width,
+      pixel_height: height,
+      margin_top: 0,
+      margin_left: 0,
+      display_content_flg: true,
+      get_pixel_flg: false,
+    }
+    const { data: newPixel } = await supabase
+      .from("pixel_sizes")
+      .insert(pixelSize)
+      .select()
+      .single()
+
+    await supabase
+      .from("contents")
+      .update({ pixel_size_id: newPixel.id })
+      .eq("order_id", orderId)
+
+    return {
+      width,
+      height,
       pixelWidth: width,
       pixelHeight: height,
       marginTop: 0,
@@ -64,53 +55,65 @@ export const setContentPixelSize = async (
       displayContentFlg: true,
       getPixelFlg: false,
     }
-    const newDocRef = await addDoc(collection(db, "PixelSize"), pixelSize)
-    const q = query(collection(db, "contents"), where("orderId", "==", orderId))
-    const snapshot = await getDocs(q)
-    const ids = []
-    snapshot.forEach((doc) => {
-      ids.push(doc.id)
-    })
-    const ref = collection(db, "contents")
-    const _content = await setDoc(
-      doc(ref, ids[0]),
-      {
-        pixelSizeId: newDocRef.id,
-      },
-      { merge: true },
-    )
-    return pixelSize
   }
-  const target = `PixelSize/${pixelSizeId}`
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const contents = await getDoc(doc(db, target))
-  if (!contents) {
+
+  const { data } = await supabase
+    .from("pixel_sizes")
+    .select()
+    .eq("id", pixelSizeId)
+    .single()
+  if (!data) {
     return null
   }
-  const pixelSize = contents.data()
-  if (!pixelSize.getPixelFlg) {
-    const app = createFirebaseApp()
-    const _newDb = getFirestore(app)
-    const ref = doc(db, "PixelSize", pixelSizeId)
-    const _content = await updateDoc(
-      ref,
-      {
-        pixelWidth: width,
-        pixelHeight: height,
-        getPixelFlg: false,
-      },
-      { merge: true },
-    )
+
+  const pixelSize = {
+    width: data.width,
+    height: data.height,
+    pixelWidth: data.pixel_width,
+    pixelHeight: data.pixel_height,
+    marginTop: data.margin_top,
+    marginLeft: data.margin_left,
+    displayContentFlg: data.display_content_flg,
+    getPixelFlg: data.get_pixel_flg,
+  }
+
+  if (!data.get_pixel_flg) {
+    await supabase
+      .from("pixel_sizes")
+      .update({
+        pixel_width: width,
+        pixel_height: height,
+        get_pixel_flg: false,
+      })
+      .eq("id", pixelSizeId)
   }
   return pixelSize
 }
 
 // 表示画面調整画面での初期設定
 export const createDisplayContent = async (orderId, pixel) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
   const pixelSize = {
+    width: 0,
+    height: 0,
+    pixel_width: pixel.pixelWidth,
+    pixel_height: pixel.pixelHeight,
+    margin_top: 0,
+    margin_left: 0,
+    display_content_flg: true,
+    get_pixel_flg: false,
+  }
+  const { data: newPixel } = await supabase
+    .from("pixel_sizes")
+    .insert(pixelSize)
+    .select()
+    .single()
+
+  await supabase
+    .from("contents")
+    .update({ pixel_size_id: newPixel.id })
+    .eq("order_id", orderId)
+
+  return {
     ...pixel,
     width: 0,
     height: 0,
@@ -119,22 +122,6 @@ export const createDisplayContent = async (orderId, pixel) => {
     displayContentFlg: true,
     getPixelFlg: false,
   }
-  const newDocRef = await addDoc(collection(db, "PixelSize"), pixelSize)
-  const q = query(collection(db, "contents"), where("orderId", "==", orderId))
-  const snapshot = await getDocs(q)
-  const ids = []
-  snapshot.forEach((doc) => {
-    ids.push(doc.id)
-  })
-  const ref = collection(db, "contents")
-  const _content = await setDoc(
-    doc(ref, ids[0]),
-    {
-      pixelSizeId: newDocRef.id,
-    },
-    { merge: true },
-  )
-  return pixelSize
 }
 
 // 表示画面調整の項目更新
@@ -145,123 +132,84 @@ export const updateDisplayContent = async (
   marginTop,
   marginLeft,
 ) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const ref = doc(db, "PixelSize", pixelSizeId)
-  await updateDoc(
-    ref,
-    {
+  await supabase
+    .from("pixel_sizes")
+    .update({
       height,
       width,
-      marginTop,
-      marginLeft,
-    },
-    { merge: true },
-  )
+      margin_top: marginTop,
+      margin_left: marginLeft,
+    })
+    .eq("id", pixelSizeId)
 }
 
 // ラズパイサイネージ表示画面でCSSピクセルサイズを再取得するためにロックを解除
 export const resetPixelSize = async (pixelSizeId) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const ref = doc(db, "PixelSize", pixelSizeId)
-  await updateDoc(
-    ref,
-    {
-      getPixelFlg: true,
-    },
-    { merge: true },
-  )
+  await supabase
+    .from("pixel_sizes")
+    .update({ get_pixel_flg: true })
+    .eq("id", pixelSizeId)
 }
 
 // エリア管理画面でエリア追加を実行
 export const createContentsData = async (areaName) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const order = {
-    hidden: [],
-    set1: [],
-  }
-  const newDocRef = await addDoc(collection(db, "order"), order)
-  const contentDocs = await getDocs(collection(db, "contents"))
+  const { data: newOrder } = await supabase
+    .from("orders")
+    .insert({ set1: [], hidden: [] })
+    .select()
+    .single()
 
-  const content = {
-    areaName: areaName,
-    orderId: newDocRef.id,
-    areaId: contentDocs.docs.length.toString(),
-    delete: false,
-  }
-  await addDoc(collection(db, "contents"), content)
+  const { count } = await supabase
+    .from("contents")
+    .select("*", { count: "exact", head: true })
+
+  await supabase.from("contents").insert({
+    area_name: areaName,
+    order_id: newOrder.id,
+    area_id: (count ?? 0).toString(),
+    deleted: false,
+  })
 }
 
 // エリア管理画面でエリア編集を実行
 export const updateContentsData = async (index, contents, areaName) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
   const orderId = contents[index].orderId
-  const q = query(collection(db, "contents"), where("orderId", "==", orderId))
-  const snapshot = await getDocs(q)
-  const ids = []
-  snapshot.forEach((doc) => {
-    ids.push(doc.id)
-  })
-  const ref = collection(db, "contents")
-  await setDoc(
-    doc(ref, ids[0]),
-    {
-      areaName: areaName,
-    },
-    { merge: true },
-  )
+  await supabase
+    .from("contents")
+    .update({ area_name: areaName })
+    .eq("order_id", orderId)
 }
 
-// エリア管理画面でエリア編集を実行
+// エリア管理画面でエリア削除を実行
 export const deleteContentsData = async (index, contents) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
   const orderId = contents[index].orderId
-  const q = query(collection(db, "contents"), where("orderId", "==", orderId))
-  const snapshot = await getDocs(q)
-  const ids = []
-  snapshot.forEach((doc) => {
-    ids.push(doc.id)
-  })
-  const ref = collection(db, "contents")
-  await setDoc(
-    doc(ref, ids[0]),
-    {
-      delete: true,
-    },
-    { merge: true },
-  )
+  await supabase
+    .from("contents")
+    .update({ deleted: true })
+    .eq("order_id", orderId)
 }
 
 // アカウント一覧管理画面でアカウント作成を実行
 export const createAccountData = async (email, password, user) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const auth = getAuth()
-
-  console.log(email)
-  const providers = await fetchSignInMethodsForEmail(auth, email)
-  if (
-    providers.indexOf(EmailAuthProvider.EMAIL_PASSWORD_SIGN_IN_METHOD) !== -1
-  ) {
-    console.log(providers)
+  const { data: authData, error } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (error) {
     console.log("登録されています")
     return
   }
-  // Firebaseで用意されているユーザー登録の関数
-  const account = await createUserWithEmailAndPassword(auth, email, password)
 
-  await sendEmailVerification(account.user)
-  //    const contentDocs = await getDocs(collection(db, "users"));
-  //
-  //    const content = {
-  //        ...user,
-  //    }
-  const target = `users/${account.user.uid}`
-  await setDoc(doc(db, target), user)
+  await supabaseAdmin.from("users").insert({
+    id: authData.user.id,
+    email,
+    user_name: user.userName,
+    management: user.management,
+    coverage_area: user.coverageArea,
+    pass_flg: user.passFlg ?? true,
+    deleted: false,
+  })
 }
 
 // アカウント一覧管理画面でアカウント編集を実行
@@ -272,95 +220,49 @@ export const updateAccountData = async (
   nowPassword,
   newPassword,
 ) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
   if (newPassword) {
-    const auth = getAuth()
-    const currentUser = auth.currentUser
-    //      console.log(currentUser);
-    //      console.log(auth.EmailAuthProvider);
-    const credential = await EmailAuthProvider.credential(email, nowPassword)
-    console.log(credential)
-    await reauthenticateWithCredential(currentUser, credential)
-      .then(async () => {
-        console.log("チェック完了")
-        // パスワードチェック成功時の処理
-        await updatePassword(currentUser, newPassword)
-          .then(async () => {
-            console.log("チェック完了")
-            // パスワードチェック成功時の処理
-          })
-          .catch((error) => {
-            // パスワードチェック失敗時の処理
-            console.log(error)
-          })
-      })
-      .catch((error) => {
-        // パスワードチェック失敗時の処理
-        console.log(error)
-      })
+    // Re-authenticate then update password
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: nowPassword,
+    })
+    if (signInError) {
+      console.log(signInError)
+      return
+    }
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+    if (updateError) {
+      console.log(updateError)
+      return
+    }
   }
-  const target = `users/${uid}`
-  await setDoc(
-    doc(db, target),
-    {
-      ...user,
-    },
-    { merge: true },
-  )
+
+  await supabase
+    .from("users")
+    .update({
+      user_name: user.userName,
+      management: user.management,
+      coverage_area: user.coverageArea,
+    })
+    .eq("id", uid)
 }
 
 // アカウント一覧管理画面でアカウント削除を実行
 export const deleteAccountData = async (uid) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const target = `users/${uid}`
-  await setDoc(
-    doc(db, target),
-    {
-      delete: true,
-    },
-    { merge: true },
-  )
+  await supabase.from("users").update({ deleted: true }).eq("id", uid)
 }
 
 // アカウント一覧管理画面でアカウント編集を実行
 export const resetAccountPassword = async (uid, newPassword) => {
-  const app = createFirebaseApp()
-  const db = getFirestore(app)
-  const _auth = getAuth()
-  //      var currentUser = auth.currentUser;
-  ////      console.log(currentUser);
-  ////      console.log(auth.EmailAuthProvider);
-  //      var credential = await EmailAuthProvider.credential(
-  //          email,
-  //          nowPassword
-  //      );
-  //      console.log(credential);
-  await updatePassword(uid, newPassword)
-    .then(async () => {
-      console.log("チェック完了")
-      // パスワードチェック成功時の処理
-      //          await updatePassword(currentUser, newPassword)
-      //          .then(async function() {
-      //            console.log("チェック完了");
-      //            // パスワードチェック成功時の処理
-      //        })
-      //        .catch(function(error) {
-      //            // パスワードチェック失敗時の処理
-      //            console.log(error);
-      //        });;
-    })
-    .catch((error) => {
-      // パスワードチェック失敗時の処理
-      console.log(error)
-    })
-  const target = `users/${uid}`
-  await setDoc(
-    doc(db, target),
-    {
-      passFlg: true,
-    },
-    { merge: true },
-  )
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(uid, {
+    password: newPassword,
+  })
+  if (error) {
+    console.log(error)
+    return
+  }
+
+  await supabaseAdmin.from("users").update({ pass_flg: true }).eq("id", uid)
 }
