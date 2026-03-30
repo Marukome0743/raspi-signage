@@ -1,5 +1,8 @@
+"use client"
+
 import { Grid } from "@mui/material"
 import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import styles from "../styles/Sinage.module.css"
 import {
   getContentDataAdmin,
@@ -8,55 +11,49 @@ import {
 import { getContentPixelSize } from "../utilities/getContentDataClient"
 import { setContentPixelSize } from "../utilities/setContentData"
 
-export async function getServerSideProps({ query }) {
-  const areaId = query.areaId ?? "0"
-  //areaIdからContents/(DocId) ⇒ orderId取得
-  const content = await getOrderIdAdmin(areaId)
-
-  const order_list = await getContentDataAdmin(content.orderId)
-  const contents_list = order_list.set1
-  console.log(contents_list)
-  //  let viewTime = 0;
-  //  for (var i = 0; i < contents_list.length; i++) {
-  //    viewTime += Number(contents_list[i].viewTime);
-  //  }
-  let pixel = null
-  if (content.pixelSizeId) {
-    pixel = await getContentPixelSize(content.pixelSizeId)
-  }
-  //  console.log(pixel);
-
-  return {
-    props: {
-      contents_list,
-      //      viewTime,
-      orderId: content.orderId,
-      pixelSizeId: content.pixelSizeId ? content.pixelSizeId : "",
-      cssPixelFlg: pixel ? pixel.getPixelFlg : true,
-    },
-  }
-}
-
-export default function Signage({
-  contents_list,
-  orderId,
-  pixelSizeId,
-  cssPixelFlg,
-}) {
+export default function Signage() {
+  const searchParams = useSearchParams()
   const divElement = useRef()
+  const [contentsList, setContentsList] = useState([])
+  const [orderId, setOrderId] = useState(null)
+  const [pixelSizeId, setPixelSizeId] = useState("")
+  const [cssPixelFlg, setCssPixelFlg] = useState(true)
+  const [loaded, setLoaded] = useState(false)
+
   const [prop_height, setHeight] = useState()
   const [prop_width, setWidth] = useState()
   const [prop_marginT, setMarginTop] = useState()
   const [prop_marginL, setMarginLeft] = useState()
   const [prop_innerHeight, setInnnerHeight] = useState()
   const [prop_innerWidth, setInnerWidth] = useState()
-  //  const [cssFlg, setCssFlg] = useState(true);
   const [slidNo, setSlidNo] = useState(0)
-
   const [display, _setDisplay] = useState(false)
 
   useEffect(() => {
-    async function setCssPixelSize() {
+    async function fetchData() {
+      const areaId = searchParams.get("areaId") ?? "0"
+      const content = await getOrderIdAdmin(areaId)
+      const order_list = await getContentDataAdmin(content.orderId)
+      const contents_list = order_list.set1
+
+      let pixel = null
+      if (content.pixelSizeId) {
+        pixel = await getContentPixelSize(content.pixelSizeId)
+      }
+
+      setContentsList(contents_list)
+      setOrderId(content.orderId)
+      setPixelSizeId(content.pixelSizeId ? content.pixelSizeId : "")
+      setCssPixelFlg(pixel ? pixel.getPixelFlg : true)
+      setLoaded(true)
+    }
+    fetchData()
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!loaded) return
+
+    async function setCssPixelSizeFn() {
       if (cssPixelFlg) {
         await setContentPixelSize(
           orderId,
@@ -75,7 +72,6 @@ export default function Signage({
         setMarginLeft(pixelSize.marginLeft)
         setInnnerHeight(pixelSize.pixelHeight)
         setInnerWidth(pixelSize.pixelWidth)
-        //        setCssFlg(pixelSize.getPixelFlg)
       } else {
         setHeight(window.innerHeight)
         setWidth(window.innerWidth)
@@ -84,19 +80,16 @@ export default function Signage({
         setInnnerHeight(window.innerHeight)
         setInnerWidth(window.innerWidth)
       }
-      //      setDisplay(true);
     }
 
-    //    console.log(display);
     if (!display) {
-      setCssPixelSize()
+      setCssPixelSizeFn()
     }
-    //    setTimeout(function () {
-    //      location.reload();
-    //    }, viewTime);
-  }, [display, cssPixelFlg, orderId, pixelSizeId])
+  }, [loaded, display, cssPixelFlg, orderId, pixelSizeId])
 
   useEffect(() => {
+    if (!loaded || contentsList.length === 0) return
+
     const viewSlide = (contentElements) => {
       if (contentElements === undefined || contentElements.length === 0) {
         return
@@ -104,18 +97,14 @@ export default function Signage({
 
       if (slidNo > 0) {
         contentElements[slidNo - 1].style.opacity = 0
-        //            if (contentElements[slidNo].tagName != "IMG") contentElements[slidNo - 1].muted = true;
       } else if (slidNo === 0) {
         contentElements[contentElements.length - 1].style.opacity = 0
       }
-      //          console.log(divElement.current);
-      //          console.log(contentElements[slidNo].tagName);
       contentElements[slidNo].style.opacity = 1
       if (contentElements[slidNo].tagName !== "IMG") {
         contentElements[slidNo].pause()
         contentElements[slidNo].currentTime = 0
         contentElements[slidNo].play()
-        //            contentElements[slidNo].muted = false;
       }
       return setInterval(
         () => {
@@ -123,14 +112,15 @@ export default function Signage({
             ? location.reload()
             : setSlidNo(slidNo + 1)
         },
-        contents_list[slidNo] ? contents_list[slidNo].viewTime : 2000,
+        contentsList[slidNo] ? contentsList[slidNo].viewTime : 2000,
       )
     }
 
-    //        if (!display) return;
-    const id = viewSlide(divElement.current.children)
+    const id = viewSlide(divElement.current?.children)
     return () => clearInterval(id)
-  }, [slidNo, contents_list])
+  }, [slidNo, contentsList, loaded])
+
+  if (!loaded) return null
 
   return (
     <Grid
@@ -152,14 +142,14 @@ export default function Signage({
           width: "100%",
         }}
       >
-        {contents_list.map((content, i) => {
+        {contentsList.map((content, i) => {
           if (content.type === "image") {
             return (
               // biome-ignore lint/performance/noImgElement: external Supabase Storage URL for signage display
               <img
                 key={content.path}
                 className={styles.content_img}
-                src={contents_list[i].path}
+                src={contentsList[i].path}
                 style={{
                   height: `${prop_height}px`,
                   width: `${prop_width}px`,
@@ -170,7 +160,6 @@ export default function Signage({
                   objectFit: "contain",
                   opacity: "0",
                 }}
-                layout="fill"
                 alt="サイネージコンテンツ"
               />
             )
@@ -179,7 +168,7 @@ export default function Signage({
             <video
               key={content.path}
               className={styles.content_video}
-              src={contents_list[i].path}
+              src={contentsList[i].path}
               style={{
                 height: `${prop_height}px`,
                 width: `${prop_width}px`,

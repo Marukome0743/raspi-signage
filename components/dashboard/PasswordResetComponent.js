@@ -8,7 +8,7 @@ import Dialog from "@mui/material/Dialog"
 import DialogContent from "@mui/material/DialogContent"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { supabase } from "../../src/supabase/client"
 import {

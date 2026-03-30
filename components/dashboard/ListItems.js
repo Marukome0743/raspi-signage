@@ -7,7 +7,7 @@ import UploadIcon from "@mui/icons-material/Upload"
 import ListItemButton from "@mui/material/ListItemButton"
 import ListItemIcon from "@mui/material/ListItemIcon"
 import ListItemText from "@mui/material/ListItemText"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import * as React from "react"
 
 export const MainListItems = (props) => {

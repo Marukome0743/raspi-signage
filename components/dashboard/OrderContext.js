@@ -1,4 +1,4 @@
-import { useRouter } from "next/router"
+import { useRouter, usePathname } from "next/navigation"
 import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "../../src/supabase/client"
 
@@ -20,7 +20,8 @@ export function OrderProvider({ children }) {
   const [progress, setProgress] = useState(false)
 
   const router = useRouter()
-  const isAvailableForViewing = router.pathname === "/dashboard/Login"
+  const pathname = usePathname()
+  const isAvailableForViewing = pathname === "/dashboard/Login"
 
   useEffect(() => {
     const {
