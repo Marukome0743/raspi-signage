@@ -1,0 +1,69 @@
+import type { User } from "@supabase/supabase-js"
+import { usePathname, useRouter } from "next/navigation"
+import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import { supabase } from "../../src/supabase/client"
+import type { OrderContextValue } from "../../src/supabase/database.types"
+
+const OrderContext = createContext<OrderContextValue | undefined>(undefined)
+
+export function useOrderContext(): OrderContextValue {
+  const context = useContext(OrderContext)
+  if (context === undefined) {
+    throw new Error("useOrderContext must be used within an OrderProvider")
+  }
+  return context
+}
+
+export function OrderProvider({ children }: { children: React.ReactNode }) {
+  const [orderId, setOrderId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [currentUser, setCurrentUser] = useState<User | null | undefined>(
+    undefined,
+  )
+  const [uid, setUid] = useState<string | undefined>(undefined)
+  const [userName, setUserName] = useState<string | undefined>(undefined)
+  const [coverageArea, setCoverageArea] = useState<string[]>([])
+  const [progress, setProgress] = useState<boolean>(false)
+
+  const router = useRouter()
+  const pathname = usePathname()
+  const isAvailableForViewing = pathname === "/dashboard/Login"
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null
+      setCurrentUser(user)
+      if (!user && !isAvailableForViewing) {
+        router.push("/dashboard/Login")
+      }
+    })
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [isAvailableForViewing, router])
+
+  return (
+    <OrderContext.Provider
+      value={{
+        orderId,
+        setOrderId,
+        isAdmin,
+        setIsAdmin,
+        currentUser,
+        uid,
+        setUid,
+        userName,
+        setUserName,
+        coverageArea,
+        setCoverageArea,
+        progress,
+        setProgress,
+      }}
+    >
+      {children}
+    </OrderContext.Provider>
+  )
+}
