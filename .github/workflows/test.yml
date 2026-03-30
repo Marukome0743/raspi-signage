@@ -7,7 +7,10 @@ concurrency:
 on:
   pull_request:
     paths:
-      - "app/**"
+      - "components/**"
+      - "pages/**"
+      - "utilities/**"
+      - "src/**"
       - "public/**"
       - "test/**"
       - "bun.lock"
@@ -15,7 +18,10 @@ on:
       - "*config.*"
   push:
     paths:
-      - "app/**"
+      - "components/**"
+      - "pages/**"
+      - "utilities/**"
+      - "src/**"
       - "public/**"
       - "test/**"
       - "bun.lock"

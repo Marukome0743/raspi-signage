@@ -1,4 +1,3 @@
-import { getAuth } from "@firebase/auth"
 import {
   Box,
   Button,
@@ -12,6 +11,7 @@ import {
 } from "@mui/material"
 import { useRouter } from "next/router"
 import { useEffect, useState } from "react"
+import { supabase } from "../../src/supabase/client"
 import {
   getAccountDataClient,
   getContentsDataClient,
@@ -133,8 +133,7 @@ function AccountSettingManagementComponent() {
     .filter((item) => item)
 
   window?.addEventListener("beforeunload", () => {
-    const auth = getAuth()
-    auth.signOut()
+    supabase.auth.signOut()
   })
   return (
     <Box>

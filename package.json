@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "test:app": "bun test test/app --preload ./happydom.js",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -17,9 +19,8 @@
     "@heroicons/react": "^2.2.0",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "@supabase/supabase-js": "^2.100.1",
     "autoprefixer": "^10.4.27",
-    "firebase": "^12.11.0",
-    "firebase-admin": "^13.7.0",
     "next": "^16.2.1",
     "postcss": "^8.5.8",
     "react": "^19.2.4",
@@ -29,6 +30,9 @@
     "swr": "^2.4.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.9"
+    "@biomejs/biome": "2.4.9",
+    "@happy-dom/global-registrator": "^20.8.9",
+    "@playwright/test": "^1.52.0",
+    "fast-check": "^4.6.0"
   }
 }

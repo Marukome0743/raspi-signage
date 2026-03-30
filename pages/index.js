@@ -155,7 +155,7 @@ export default function Signage({
         {contents_list.map((content, i) => {
           if (content.type === "image") {
             return (
-              // biome-ignore lint/performance/noImgElement: external Firebase Storage URL for signage display
+              // biome-ignore lint/performance/noImgElement: external Supabase Storage URL for signage display
               <img
                 key={content.path}
                 className={styles.content_img}

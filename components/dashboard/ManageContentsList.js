@@ -274,7 +274,7 @@ function ManageContentsView() {
                 </Grid>
                 <Grid item xs={3} style={{ minWidth: "280px" }}>
                   {content.type === "image" ? (
-                    // biome-ignore lint/performance/noImgElement: external Firebase Storage URL
+                    // biome-ignore lint/performance/noImgElement: external Supabase Storage URL
                     <img
                       src={content.path}
                       style={{
