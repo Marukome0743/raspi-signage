@@ -1,3 +1,20 @@
+import type { DragEndEvent } from "@dnd-kit/core"
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import CancelIcon from "@mui/icons-material/Cancel"
 import {
   Box,
@@ -15,12 +32,6 @@ import {
 } from "@mui/material"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import type {
-  DraggableProvided,
-  DropResult,
-  ResponderProvided,
-} from "react-beautiful-dnd"
-import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 import type { ContentItem, Order } from "../../src/supabase/database.types"
 import { getContentDataClient } from "../../utilities/getContentDataClient"
 import { setContentOrder } from "../../utilities/setContentData"
@@ -30,7 +41,153 @@ interface DisplayContentItem extends ContentItem {
   delete?: boolean
 }
 
+interface SortableItemProps {
+  id: string
+  name: string
+  content: DisplayContentItem
+  index: number
+  eventHandler: (e: React.ChangeEvent<HTMLInputElement>, i: number) => void
+  checked: boolean
+  onCheckBoxChange: (name: string) => void
+  onRemove: (checked: boolean, index: number) => Promise<void>
+}
+
+function SortableItem({
+  id,
+  name,
+  content,
+  index,
+  eventHandler,
+  checked,
+  onCheckBoxChange,
+  onRemove,
+}: SortableItemProps): React.JSX.Element {
+  const { attributes, listeners, setNodeRef, transform, transition } =
+    useSortable({ id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <ListItem ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Paper
+        sx={{ height: 1 / 5, m: 1 }}
+        style={{
+          position: "relative",
+          minWidth: "400px",
+          height: "100%",
+        }}
+      >
+        <Grid container>
+          <Grid
+            size={1}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              paddingBottom: "2rem",
+              minWidth: "45px",
+            }}
+          >
+            <FormControlLabel
+              label="表示"
+              labelPlacement="top"
+              control={
+                <Checkbox
+                  name={name + index}
+                  checked={checked}
+                  onChange={(e) => onCheckBoxChange(e.target.name)}
+                />
+              }
+            />
+          </Grid>
+          <Grid size={3} style={{ minWidth: "280px" }}>
+            {content.type === "image" ? (
+              // biome-ignore lint/performance/noImgElement: external Supabase Storage URL
+              <img
+                src={content.path}
+                style={{
+                  width: "30vh",
+                  objectFit: "contain",
+                  margin: "1rem",
+                }}
+                alt="コンテンツプレビュー"
+              />
+            ) : (
+              <video
+                src={content.path}
+                style={{
+                  width: "30vh",
+                  objectFit: "contain",
+                  margin: "1rem",
+                }}
+                muted
+                autoPlay
+                loop
+                playsInline
+              />
+            )}
+          </Grid>
+          <Grid size={6} container style={{ padding: "20px" }}>
+            <Grid style={{ padding: "5px" }}>
+              <Typography>ファイル名: {content.fileName}</Typography>
+            </Grid>
+            <Grid container direction="column">
+              <Grid
+                style={{
+                  display: "flex",
+                  minWidth: "550px",
+                  height: "45px",
+                  padding: "5px",
+                }}
+              >
+                <Typography style={{ width: "20%", lineHeight: "35px" }}>
+                  表示時間(秒):{" "}
+                </Typography>
+                <input
+                  type="number"
+                  style={{ width: "20%" }}
+                  name={name + index}
+                  disabled={content.type === "video"}
+                  placeholder={String(Number(content.viewTime / 1000))}
+                  onInput={(event: React.FormEvent<HTMLInputElement>) =>
+                    eventHandler(
+                      event as React.ChangeEvent<HTMLInputElement>,
+                      index,
+                    )
+                  }
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+        </Grid>
+        <IconButton
+          aria-label="delete image"
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            color: "#aaa",
+          }}
+          onClick={() => onRemove(checked, index)}
+        >
+          <CancelIcon />
+        </IconButton>
+      </Paper>
+    </ListItem>
+  )
+}
+
 function ManageContentsView(): React.JSX.Element {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
+
   // display / hidden: arrays for visible/hidden contents
   const [display, setDisplay] = useState<DisplayContentItem[]>([])
   const [hidden, setHidden] = useState<DisplayContentItem[]>([])
@@ -163,160 +320,38 @@ function ManageContentsView(): React.JSX.Element {
     }
   }
 
-  const handleDragEnd = (
-    result: DropResult,
-    _: ResponderProvided,
-    name: string,
-  ): void => {
-    if (!result.destination) {
+  const handleDragEndDisplay = (event: DragEndEvent): void => {
+    const { active, over } = event
+    if (!over || active.id === over.id) {
       return
     }
-    if (name === "d") {
-      const itemsCopy = [...display]
-      const [reorderedItem] = itemsCopy.splice(result.source.index, 1)
-      itemsCopy.splice(result.destination.index, 0, reorderedItem)
+    setDisplay((items) => {
+      const oldIndex = items.findIndex((_, i) => `display-${i}` === active.id)
+      const newIndex = items.findIndex((_, i) => `display-${i}` === over.id)
+      if (oldIndex === -1 || newIndex === -1) {
+        return items
+      }
+      return arrayMove(items, oldIndex, newIndex)
+    })
+  }
 
-      setDisplay(itemsCopy)
-    } else if (name === "h") {
-      const itemsCopy = [...hidden]
-      const [reorderedItem] = itemsCopy.splice(result.source.index, 1)
-      itemsCopy.splice(result.destination.index, 0, reorderedItem)
-
-      setHidden(itemsCopy)
+  const handleDragEndHidden = (event: DragEndEvent): void => {
+    const { active, over } = event
+    if (!over || active.id === over.id) {
+      return
     }
+    setHidden((items) => {
+      const oldIndex = items.findIndex((_, i) => `hidden-${i}` === active.id)
+      const newIndex = items.findIndex((_, i) => `hidden-${i}` === over.id)
+      if (oldIndex === -1 || newIndex === -1) {
+        return items
+      }
+      return arrayMove(items, oldIndex, newIndex)
+    })
   }
 
   const handleCloseError = (): void => {
     setShowError(false)
-  }
-
-  const createContentCard = (
-    name: string,
-    content: DisplayContentItem | null | undefined,
-    i: number,
-    eventHandler: (e: React.ChangeEvent<HTMLInputElement>, i: number) => void,
-    checked: boolean,
-  ): React.JSX.Element | undefined => {
-    if (content === null || content === undefined) {
-      return
-    }
-    return (
-      <Draggable key={`drag_key${i}`} draggableId={`drag${i}`} index={i}>
-        {(provided: DraggableProvided) => (
-          <ListItem
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            {...provided.dragHandleProps}
-          >
-            <Paper
-              sx={{ height: 1 / 5, m: 1 }}
-              key={`key${i}`}
-              style={{
-                position: "relative",
-                minWidth: "400px",
-                height: "100%",
-              }}
-            >
-              <Grid container>
-                <Grid
-                  size={1}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    paddingBottom: "2rem",
-                    minWidth: "45px",
-                  }}
-                >
-                  <FormControlLabel
-                    label="表示"
-                    labelPlacement="top"
-                    control={
-                      <Checkbox
-                        name={name + i}
-                        checked={checked}
-                        onChange={(e) => onChangeCheckBox(e.target.name)}
-                      />
-                    }
-                  />
-                </Grid>
-                <Grid size={3} style={{ minWidth: "280px" }}>
-                  {content.type === "image" ? (
-                    // biome-ignore lint/performance/noImgElement: external Supabase Storage URL
-                    <img
-                      src={content.path}
-                      style={{
-                        width: "30vh",
-                        objectFit: "contain",
-                        margin: "1rem",
-                      }}
-                      alt="コンテンツプレビュー"
-                    />
-                  ) : (
-                    <video
-                      src={content.path}
-                      style={{
-                        width: "30vh",
-                        objectFit: "contain",
-                        margin: "1rem",
-                      }}
-                      muted
-                      autoPlay
-                      loop
-                      playsInline
-                    />
-                  )}
-                </Grid>
-                <Grid size={6} container style={{ padding: "20px" }}>
-                  <Grid style={{ padding: "5px" }}>
-                    <Typography>ファイル名: {content.fileName}</Typography>
-                  </Grid>
-                  <Grid container direction="column">
-                    <Grid
-                      style={{
-                        display: "flex",
-                        minWidth: "550px",
-                        height: "45px",
-                        padding: "5px",
-                      }}
-                    >
-                      <Typography style={{ width: "20%", lineHeight: "35px" }}>
-                        表示時間(秒):{" "}
-                      </Typography>
-                      <input
-                        type="number"
-                        style={{ width: "20%" }}
-                        name={name + i}
-                        disabled={content.type === "video"}
-                        placeholder={String(Number(content.viewTime / 1000))}
-                        onInput={(event: React.FormEvent<HTMLInputElement>) =>
-                          eventHandler(
-                            event as React.ChangeEvent<HTMLInputElement>,
-                            i,
-                          )
-                        }
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Grid>
-              <IconButton
-                aria-label="delete image"
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  right: 10,
-                  color: "#aaa",
-                }}
-                onClick={() => onClickRemove(checked, i)}
-              >
-                <CancelIcon />
-              </IconButton>
-            </Paper>
-          </ListItem>
-        )}
-      </Draggable>
-    )
   }
 
   return (
@@ -329,35 +364,61 @@ function ManageContentsView(): React.JSX.Element {
       </Box>
       <Box style={{ display: "flex", flexDirection: "column" }}>
         <Typography>ー 表示コンテンツ</Typography>
-        <DragDropContext
-          onDragEnd={(e, provided) => handleDragEnd(e, provided, "d")}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEndDisplay}
         >
-          <Droppable droppableId="my-list">
-            {(provided) => (
-              <List ref={provided.innerRef} {...provided.droppableProps}>
-                {display.map((content, i) =>
-                  createContentCard("d", content, i, changeTempDisplay, true),
-                )}
-                {provided.placeholder}
-              </List>
-            )}
-          </Droppable>
-        </DragDropContext>
+          <SortableContext
+            items={display.map((_, i) => `display-${i}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <List>
+              {display.map((content, i) => (
+                <SortableItem
+                  // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
+                  key={`display-${i}`}
+                  id={`display-${i}`}
+                  name="d"
+                  content={content}
+                  index={i}
+                  eventHandler={changeTempDisplay}
+                  checked={true}
+                  onCheckBoxChange={onChangeCheckBox}
+                  onRemove={onClickRemove}
+                />
+              ))}
+            </List>
+          </SortableContext>
+        </DndContext>
         <Typography>ー 非表示コンテンツ</Typography>
-        <DragDropContext
-          onDragEnd={(e, provided) => handleDragEnd(e, provided, "h")}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEndHidden}
         >
-          <Droppable droppableId="my-list">
-            {(provided) => (
-              <List ref={provided.innerRef} {...provided.droppableProps}>
-                {hidden.map((content, i) =>
-                  createContentCard("h", content, i, changeTempHidden, false),
-                )}
-                {provided.placeholder}
-              </List>
-            )}
-          </Droppable>
-        </DragDropContext>
+          <SortableContext
+            items={hidden.map((_, i) => `hidden-${i}`)}
+            strategy={verticalListSortingStrategy}
+          >
+            <List>
+              {hidden.map((content, i) => (
+                <SortableItem
+                  // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
+                  key={`hidden-${i}`}
+                  id={`hidden-${i}`}
+                  name="h"
+                  content={content}
+                  index={i}
+                  eventHandler={changeTempHidden}
+                  checked={false}
+                  onCheckBoxChange={onChangeCheckBox}
+                  onRemove={onClickRemove}
+                />
+              ))}
+            </List>
+          </SortableContext>
+        </DndContext>
       </Box>
       <Dialog open={showError} onClose={handleCloseError}>
         <DialogContent>
