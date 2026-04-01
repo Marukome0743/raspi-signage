@@ -18,20 +18,12 @@ Digital signage system for Raspberry Pi. Built with Next.js 16 (App Router) + Ty
 ## Setup commands
 
 ```bash
-mise install              # Install tools
+mise install              # Install tools (bun, supabase, etc.)
 supabase start            # Start local Supabase
-cp .env.local.example .env.local
+mise run supabase:env     # Generate .env from Supabase
 supabase db reset         # Run migrations + seed data
 bun install
 bun dev                   # http://localhost:3000
-```
-
-mise tasks are also available:
-
-```bash
-mise run supabase:start   # Start Supabase
-mise run supabase:stop    # Stop Supabase
-mise run supabase:reset   # Reset DB + seed
 ```
 
 ## Testing

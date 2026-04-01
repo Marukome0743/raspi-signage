@@ -2,6 +2,7 @@
 bun = "latest"
 markdownlint-cli2 = "latest"
 pitchfork = "latest"
+supabase = "latest"
 
 [tasks.lint]
 run = ["bun lint:fix --write", "mise lint:md"]
@@ -9,6 +10,10 @@ run = ["bun lint:fix --write", "mise lint:md"]
 [tasks."lint:md"]
 description = "Check markdown files for linting issues"
 run = "markdownlint-cli2 '**/*.md'"
+
+[tasks."supabase:env"]
+description = "Generate .env from running Supabase instance"
+run = 'bun scripts/supabase-env.ts'
 
 [tasks.update]
 description = "Update bun dependencies and reinstall with isolated linker"

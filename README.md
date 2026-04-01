@@ -5,14 +5,14 @@ Digital signage system with Raspberry Pi
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
-- [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started)
-- [Bun](https://bun.sh/)
+- [mise](https://mise.jdx.dev/)
 
 ## Setup
 
-### 1. Start Supabase locally
+### 1. Install tools and start Supabase locally
 
 ```bash
+mise install
 supabase start
 ```
 
@@ -23,19 +23,13 @@ This starts all Supabase services via Docker. After startup, the CLI outputs the
 
 ### 2. Configure environment variables
 
-Create a `.env` file in the project root:
+Generate a `.env` file from the running Supabase instance:
 
 ```bash
-touch .env
+mise run supabase:env
 ```
 
-Set the following environment variables. The values below are defaults for the local Supabase instance.
-
-| Variable | Description | Local default |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase API URL | `http://127.0.0.1:54321` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | `anon key` from `supabase start` output |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | `service_role key` from `supabase start` output |
+This writes `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to `.env` automatically.
 
 > **Note:** `.env` is included in `.gitignore`. Do not commit secrets to the repository.
 
