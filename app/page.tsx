@@ -1,34 +1,90 @@
 "use client"
 
 import { Grid } from "@mui/material"
+import Image from "next/image"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useEffect, useRef, useState } from "react"
-import type { ContentItem } from "../src/supabase/database.types"
-import styles from "../styles/Sinage.module.css"
+import { Suspense, useEffect, useReducer, useRef } from "react"
+import styles from "@/app/styles.module.css"
+import { getContentPixelSize } from "@/src/services/contents"
 import {
   getContentDataAdmin,
   getOrderIdAdmin,
-} from "../utilities/getContentDataAdmin"
-import { getContentPixelSize } from "../utilities/getContentDataClient"
-import { setContentPixelSize } from "../utilities/setContentData"
+} from "@/src/services/contents-admin"
+import { setContentPixelSize } from "@/src/services/pixel-sizes"
+import type { ContentItem } from "@/src/supabase/database.types"
+
+interface SignageDisplayState {
+  height: number
+  width: number
+  marginTop: number
+  marginLeft: number
+  innerHeight: number
+  innerWidth: number
+}
+
+interface SignageState {
+  contentsList: ContentItem[]
+  orderId: string | null
+  pixelSizeId: string
+  cssPixelFlg: boolean
+  loaded: boolean
+  slideNo: number
+  display: SignageDisplayState
+}
+
+type SignageAction =
+  | {
+      type: "SET_INITIAL"
+      contentsList: ContentItem[]
+      orderId: string
+      pixelSizeId: string
+      cssPixelFlg: boolean
+    }
+  | { type: "SET_DISPLAY"; display: SignageDisplayState }
+  | { type: "NEXT_SLIDE" }
+
+const initialState: SignageState = {
+  contentsList: [],
+  orderId: null,
+  pixelSizeId: "",
+  cssPixelFlg: true,
+  loaded: false,
+  slideNo: 0,
+  display: {
+    height: 0,
+    width: 0,
+    marginTop: 0,
+    marginLeft: 0,
+    innerHeight: 0,
+    innerWidth: 0,
+  },
+}
+
+function signageReducer(
+  state: SignageState,
+  action: SignageAction,
+): SignageState {
+  switch (action.type) {
+    case "SET_INITIAL":
+      return {
+        ...state,
+        contentsList: action.contentsList,
+        orderId: action.orderId,
+        pixelSizeId: action.pixelSizeId,
+        cssPixelFlg: action.cssPixelFlg,
+        loaded: true,
+      }
+    case "SET_DISPLAY":
+      return { ...state, display: action.display }
+    case "NEXT_SLIDE":
+      return { ...state, slideNo: state.slideNo + 1 }
+  }
+}
 
 function SignageContent(): React.ReactElement | null {
   const searchParams = useSearchParams()
   const divElement = useRef<HTMLDivElement>(null)
-  const [contentsList, setContentsList] = useState<ContentItem[]>([])
-  const [orderId, setOrderId] = useState<string | null>(null)
-  const [pixelSizeId, setPixelSizeId] = useState<string>("")
-  const [cssPixelFlg, setCssPixelFlg] = useState<boolean>(true)
-  const [loaded, setLoaded] = useState<boolean>(false)
-
-  const [prop_height, setHeight] = useState<number>(0)
-  const [prop_width, setWidth] = useState<number>(0)
-  const [prop_marginT, setMarginTop] = useState<number>(0)
-  const [prop_marginL, setMarginLeft] = useState<number>(0)
-  const [prop_innerHeight, setInnnerHeight] = useState<number>(0)
-  const [prop_innerWidth, setInnerWidth] = useState<number>(0)
-  const [slidNo, setSlidNo] = useState<number>(0)
-  const [display] = useState<boolean>(false)
+  const [state, dispatch] = useReducer(signageReducer, initialState)
 
   useEffect(() => {
     async function fetchData() {
@@ -42,58 +98,68 @@ function SignageContent(): React.ReactElement | null {
         pixel = await getContentPixelSize(content.pixelSizeId)
       }
 
-      setContentsList(contents_list)
-      setOrderId(content.orderId)
-      setPixelSizeId(content.pixelSizeId ? content.pixelSizeId : "")
-      setCssPixelFlg(pixel ? pixel.getPixelFlg : true)
-      setLoaded(true)
+      dispatch({
+        type: "SET_INITIAL",
+        contentsList: contents_list,
+        orderId: content.orderId,
+        pixelSizeId: content.pixelSizeId ? content.pixelSizeId : "",
+        cssPixelFlg: pixel ? pixel.getPixelFlg : true,
+      })
     }
     fetchData()
   }, [searchParams])
 
   useEffect(() => {
-    if (!loaded) {
+    if (!state.loaded) {
       return
     }
 
     async function setCssPixelSizeFn() {
-      if (cssPixelFlg && orderId) {
+      if (state.cssPixelFlg && state.orderId) {
         await setContentPixelSize(
-          orderId,
-          pixelSizeId,
+          state.orderId,
+          state.pixelSizeId,
           window.innerWidth,
           window.innerHeight,
         )
       }
-      if (pixelSizeId !== "") {
-        const pixelSize = await getContentPixelSize(pixelSizeId)
+      if (state.pixelSizeId !== "") {
+        const pixelSize = await getContentPixelSize(state.pixelSizeId)
         if (pixelSize) {
-          setHeight(
-            pixelSize.height !== 0 ? pixelSize.height : window.innerHeight,
-          )
-          setWidth(pixelSize.width !== 0 ? pixelSize.width : window.innerWidth)
-          setMarginTop(pixelSize.marginTop)
-          setMarginLeft(pixelSize.marginLeft)
-          setInnnerHeight(pixelSize.pixelHeight)
-          setInnerWidth(pixelSize.pixelWidth)
+          dispatch({
+            type: "SET_DISPLAY",
+            display: {
+              height:
+                pixelSize.height !== 0 ? pixelSize.height : window.innerHeight,
+              width:
+                pixelSize.width !== 0 ? pixelSize.width : window.innerWidth,
+              marginTop: pixelSize.marginTop,
+              marginLeft: pixelSize.marginLeft,
+              innerHeight: pixelSize.pixelHeight,
+              innerWidth: pixelSize.pixelWidth,
+            },
+          })
         }
       } else {
-        setHeight(window.innerHeight)
-        setWidth(window.innerWidth)
-        setMarginTop(0)
-        setMarginLeft(0)
-        setInnnerHeight(window.innerHeight)
-        setInnerWidth(window.innerWidth)
+        dispatch({
+          type: "SET_DISPLAY",
+          display: {
+            height: window.innerHeight,
+            width: window.innerWidth,
+            marginTop: 0,
+            marginLeft: 0,
+            innerHeight: window.innerHeight,
+            innerWidth: window.innerWidth,
+          },
+        })
       }
     }
 
-    if (!display) {
-      setCssPixelSizeFn()
-    }
-  }, [loaded, display, cssPixelFlg, orderId, pixelSizeId])
+    setCssPixelSizeFn()
+  }, [state.loaded, state.cssPixelFlg, state.orderId, state.pixelSizeId])
 
   useEffect(() => {
-    if (!loaded || contentsList.length === 0) {
+    if (!state.loaded || state.contentsList.length === 0) {
       return
     }
 
@@ -104,39 +170,43 @@ function SignageContent(): React.ReactElement | null {
         return
       }
 
-      if (slidNo > 0) {
-        ;(contentElements[slidNo - 1] as HTMLElement).style.opacity = "0"
-      } else if (slidNo === 0) {
+      if (state.slideNo > 0) {
+        ;(contentElements[state.slideNo - 1] as HTMLElement).style.opacity = "0"
+      } else if (state.slideNo === 0) {
         ;(
           contentElements[contentElements.length - 1] as HTMLElement
         ).style.opacity = "0"
       }
-      ;(contentElements[slidNo] as HTMLElement).style.opacity = "1"
-      if (contentElements[slidNo].tagName !== "IMG") {
-        const videoEl = contentElements[slidNo] as HTMLVideoElement
+      ;(contentElements[state.slideNo] as HTMLElement).style.opacity = "1"
+      if (contentElements[state.slideNo].tagName !== "IMG") {
+        const videoEl = contentElements[state.slideNo] as HTMLVideoElement
         videoEl.pause()
         videoEl.currentTime = 0
         videoEl.play()
       }
       return setInterval(
         () => {
-          if (slidNo >= contentElements.length - 1) {
+          if (state.slideNo >= contentElements.length - 1) {
             location.reload()
           } else {
-            setSlidNo(slidNo + 1)
+            dispatch({ type: "NEXT_SLIDE" })
           }
         },
-        contentsList[slidNo] ? contentsList[slidNo].viewTime : 2000,
+        state.contentsList[state.slideNo]
+          ? state.contentsList[state.slideNo].viewTime
+          : 2000,
       )
     }
 
     const id = viewSlide(divElement.current?.children)
     return () => clearInterval(id)
-  }, [slidNo, contentsList, loaded])
+  }, [state.slideNo, state.contentsList, state.loaded])
 
-  if (!loaded) {
+  if (!state.loaded) {
     return null
   }
+
+  const { display: d } = state
 
   return (
     <Grid
@@ -158,21 +228,23 @@ function SignageContent(): React.ReactElement | null {
           width: "100%",
         }}
       >
-        {contentsList.map((content, i) => {
+        {state.contentsList.map((content, i) => {
           if (content.type === "image") {
             return (
-              // biome-ignore lint/performance/noImgElement: external Supabase Storage URL for signage display
-              <img
+              <Image
                 key={content.path}
-                className={styles.content_img}
-                src={contentsList[i].path}
+                className={styles.content_media}
+                src={state.contentsList[i].path}
+                width={0}
+                height={0}
+                unoptimized
                 style={{
-                  height: `${prop_height}px`,
-                  width: `${prop_width}px`,
-                  marginTop: `${prop_marginT}px`,
-                  marginLeft: `${prop_marginL}px`,
-                  marginRight: `${prop_innerWidth - prop_width - prop_marginL}px`,
-                  marginBottom: `${prop_innerHeight - prop_height - prop_marginT}px`,
+                  height: `${d.height}px`,
+                  width: `${d.width}px`,
+                  marginTop: `${d.marginTop}px`,
+                  marginLeft: `${d.marginLeft}px`,
+                  marginRight: `${d.innerWidth - d.width - d.marginLeft}px`,
+                  marginBottom: `${d.innerHeight - d.height - d.marginTop}px`,
                   objectFit: "contain",
                   opacity: "0",
                 }}
@@ -183,15 +255,15 @@ function SignageContent(): React.ReactElement | null {
           return (
             <video
               key={content.path}
-              className={styles.content_video}
-              src={contentsList[i].path}
+              className={styles.content_media}
+              src={state.contentsList[i].path}
               style={{
-                height: `${prop_height}px`,
-                width: `${prop_width}px`,
-                marginTop: `${prop_marginT}px`,
-                marginLeft: `${prop_marginL}px`,
-                marginRight: `${prop_innerWidth - prop_width - prop_marginL}px`,
-                marginBottom: `${prop_innerHeight - prop_height - prop_marginT}px`,
+                height: `${d.height}px`,
+                width: `${d.width}px`,
+                marginTop: `${d.marginTop}px`,
+                marginLeft: `${d.marginLeft}px`,
+                marginRight: `${d.innerWidth - d.width - d.marginLeft}px`,
+                marginBottom: `${d.innerHeight - d.height - d.marginTop}px`,
                 objectFit: "contain",
                 opacity: "0",
               }}

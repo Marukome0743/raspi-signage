@@ -3,25 +3,16 @@ bun = "latest"
 markdownlint-cli2 = "latest"
 pitchfork = "latest"
 
-[tasks.update]
-description = "Update bun dependencies and reinstall with isolated linker"
-run = ["bun update", "bun i --linker=isolated", "mise prep"]
+[tasks.lint]
+run = ["bun lint:fix --write", "mise lint:md"]
 
-[tasks."check:md"]
+[tasks."lint:md"]
 description = "Check markdown files for linting issues"
 run = "markdownlint-cli2 '**/*.md'"
 
-[tasks."supabase:start"]
-description = "Start local Supabase services"
-run = "supabase start"
-
-[tasks."supabase:stop"]
-description = "Stop local Supabase services"
-run = "supabase stop"
-
-[tasks."supabase:reset"]
-description = "Run migrations and seed the database"
-run = "supabase db reset"
+[tasks.update]
+description = "Update bun dependencies and reinstall with isolated linker"
+run = ["bun update", "bun i --linker=isolated", "mise prep"]
 
 [hooks]
 enter = ["mise i -q", "mise prep -q"]

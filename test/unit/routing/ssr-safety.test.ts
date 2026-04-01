@@ -67,20 +67,24 @@ describe("App Router migration: SSR safety", () => {
     for (const file of componentFiles) {
       const content = readFileSync(file, "utf-8")
       const lines = content.split("\n")
-      let inUseEffect = 0
+      let inSafeScope = 0
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
-        if (line.includes("useEffect")) {
-          inUseEffect++
+        if (
+          line.includes("useEffect") ||
+          /=>\s*\{/.test(line) ||
+          /async\s*\(/.test(line)
+        ) {
+          inSafeScope++
         }
 
-        if (inUseEffect > 0) {
+        if (inSafeScope > 0) {
           const opens = (line.match(/\{/g) || []).length
           const closes = (line.match(/\}/g) || []).length
-          inUseEffect += opens - closes
-          if (inUseEffect <= 0) {
-            inUseEffect = 0
+          inSafeScope += opens - closes
+          if (inSafeScope <= 0) {
+            inSafeScope = 0
           }
           continue
         }

@@ -3,29 +3,28 @@ import {
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogContent,
   FormControlLabel,
   Grid,
   IconButton,
   Paper,
   Typography,
 } from "@mui/material"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import type {
-  ContentListItem,
-  UserAccount,
-} from "../../src/supabase/database.types"
-import {
-  getContentsDataClient,
-  getUserAccountList,
-} from "../../utilities/getContentDataClient"
 import {
   createAccountData,
   deleteAccountData,
   updateAccountData,
-} from "../../utilities/setContentData"
+} from "@/src/services/accounts"
+import {
+  getContentsDataClient,
+  mapContentToListItem,
+} from "@/src/services/contents"
+import { getUserAccountList } from "@/src/services/users"
+import type {
+  ContentListItem,
+  UserAccount,
+} from "@/src/supabase/database.types"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 interface UserEditState {
@@ -57,26 +56,14 @@ function UserAccountManagementComponent(): React.JSX.Element {
   const [detailDisplay, setDetailDisplay] = useState<boolean[]>([])
   const [settingDisplay, setSettingDisplay] = useState<boolean[]>([])
 
-  const { isAdmin, uid, setCoverageArea, setProgress } = useOrderContext()
-
-  const router = useRouter()
+  const { uid, setCoverageArea, setProgress } = useOrderContext()
 
   useEffect(() => {
-    if (sessionStorage.getItem("uid") && !isAdmin) {
-      router.push("/dashboard")
-    } else if (!sessionStorage.getItem("uid") && !uid) {
-      router.push("/dashboard/Login")
-    }
     async function getInfoData(): Promise<void> {
       const getUserList = await getUserAccountList()
       const contents = await getContentsDataClient()
-      const mappedContents: ContentListItem[] = (contents ?? []).map((c) => ({
-        areaId: c.area_id,
-        areaName: c.area_name,
-        orderId: c.order_id,
-        pixelSizeId: c.pixel_size_id,
-        delete: c.deleted,
-      }))
+      const mappedContents: ContentListItem[] =
+        contents.map(mapContentToListItem)
       setUserList(getUserList ?? [])
       setContentList(mappedContents)
       setDisplayFlg(true)
@@ -105,7 +92,7 @@ function UserAccountManagementComponent(): React.JSX.Element {
       setArea(areaList)
     }
     getInfoData()
-  }, [isAdmin, router.push, uid])
+  }, [])
 
   useEffect(() => {
     const areaList = contentList.map(() => false)
@@ -164,7 +151,9 @@ function UserAccountManagementComponent(): React.JSX.Element {
       await createAccountData(email, password, user)
       setCreateDisplay(false)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -195,7 +184,9 @@ function UserAccountManagementComponent(): React.JSX.Element {
         setCoverageArea(list)
       }
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -210,7 +201,9 @@ function UserAccountManagementComponent(): React.JSX.Element {
       setProgress(true)
       await deleteAccountData(userList[index].uid)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -259,7 +252,7 @@ function UserAccountManagementComponent(): React.JSX.Element {
   }
 
   const onSettingChangeUserName = (
-    e: React.FormEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>,
     index: number,
   ): void => {
     setUsers(
@@ -269,7 +262,7 @@ function UserAccountManagementComponent(): React.JSX.Element {
         }
         return {
           ...users[i],
-          userName: (e.target as HTMLInputElement).value,
+          userName: e.target.value,
         }
       }),
     )
@@ -350,8 +343,8 @@ function UserAccountManagementComponent(): React.JSX.Element {
                           style={{ width: "50%" }}
                           name={"email"}
                           placeholder={"email"}
-                          onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                            setEmail((e.target as HTMLInputElement).value)
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setEmail(e.target.value)
                           }
                         />
                       </Grid>
@@ -384,8 +377,8 @@ function UserAccountManagementComponent(): React.JSX.Element {
                           style={{ width: "50%" }}
                           name={"password"}
                           placeholder={"パスワード"}
-                          onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                            setPassword((e.target as HTMLInputElement).value)
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setPassword(e.target.value)
                           }
                         />
                       </Grid>
@@ -418,8 +411,8 @@ function UserAccountManagementComponent(): React.JSX.Element {
                           style={{ width: "50%" }}
                           name={"userName"}
                           placeholder={"名前"}
-                          onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                            setUserName((e.target as HTMLInputElement).value)
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setUserName(e.target.value)
                           }
                         />
                       </Grid>
@@ -725,8 +718,8 @@ function UserAccountManagementComponent(): React.JSX.Element {
                                   name={`users[${index}].userName`}
                                   placeholder={user.userName}
                                   disabled={users[index]?.userNameFlg}
-                                  onInput={(
-                                    e: React.FormEvent<HTMLInputElement>,
+                                  onChange={(
+                                    e: React.ChangeEvent<HTMLInputElement>,
                                   ) => onSettingChangeUserName(e, index)}
                                 />
                               </Grid>
@@ -898,15 +891,12 @@ function UserAccountManagementComponent(): React.JSX.Element {
           </>
         )}
       </Box>
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">エリア追加時のエリア名</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart="エリア追加時のエリア名"
+        open={showError}
+        onClose={handleCloseError}
+      />
     </>
   )
 }

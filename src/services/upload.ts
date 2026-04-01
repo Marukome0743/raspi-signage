@@ -1,6 +1,6 @@
-import { supabase } from "../src/supabase/client"
-import type { ContentItem } from "../src/supabase/database.types"
-import { updateContentOrder } from "./setContentData"
+import { createClient } from "@/src/supabase/client"
+import type { ContentItem } from "@/src/supabase/database.types"
+import { updateContentOrder } from "./contents"
 
 const BUCKET = "signage-contents"
 
@@ -11,6 +11,7 @@ export const postContent = async (
   type: ContentItem["type"],
   duration: number,
 ): Promise<void> => {
+  const supabase = createClient()
   if (!content.name) {
     return
   }

@@ -14,7 +14,7 @@ const state: { listResult: StorageListResult } = {
 }
 
 mock.module("../../../src/supabase/client", () => ({
-  supabase: {
+  createClient: () => ({
     storage: {
       from: () => ({
         list: () => Promise.resolve(state.listResult),
@@ -25,10 +25,10 @@ mock.module("../../../src/supabase/client", () => ({
         }),
       }),
     },
-  },
+  }),
 }))
 
-const { downLoadURLList } = await import("../../../utilities/download")
+const { downLoadURLList } = await import("../../../src/services/download")
 
 describe("downLoadURLList", () => {
   test("returns public URLs for files in area", async () => {

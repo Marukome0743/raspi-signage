@@ -7,30 +7,30 @@ const root = resolve(import.meta.dir, "../../..")
 describe("App Router migration: dashboard route parity", () => {
   const routes: { path: string; page: string }[] = [
     { path: "/dashboard", page: "app/dashboard/page.tsx" },
-    { path: "/dashboard/Login", page: "app/dashboard/Login/page.tsx" },
+    { path: "/dashboard/login", page: "app/dashboard/Login/page.tsx" },
     {
-      path: "/dashboard/PasswordReset",
-      page: "app/dashboard/PasswordReset/page.tsx",
+      path: "/dashboard/password-reset",
+      page: "app/dashboard/password-reset/page.tsx",
     },
     {
-      path: "/dashboard/ManageContents",
-      page: "app/dashboard/ManageContents/page.tsx",
+      path: "/dashboard/manage-contents",
+      page: "app/dashboard/manage-contents/page.tsx",
     },
     {
-      path: "/dashboard/AccountSettingManagement",
-      page: "app/dashboard/AccountSettingManagement/page.tsx",
+      path: "/dashboard/account-setting-management",
+      page: "app/dashboard/account-setting-management/page.tsx",
     },
     {
-      path: "/dashboard/AreaManagement",
-      page: "app/dashboard/AreaManagement/page.tsx",
+      path: "/dashboard/area-management",
+      page: "app/dashboard/area-management/page.tsx",
     },
     {
-      path: "/dashboard/UserAccountManagement",
-      page: "app/dashboard/UserAccountManagement/page.tsx",
+      path: "/dashboard/user-account-management",
+      page: "app/dashboard/user-account-management/page.tsx",
     },
     {
-      path: "/dashboard/ViewPosition",
-      page: "app/dashboard/ViewPosition/page.tsx",
+      path: "/dashboard/view-position",
+      page: "app/dashboard/view-position/page.tsx",
     },
   ]
 
@@ -48,11 +48,11 @@ describe("App Router migration: dashboard route parity", () => {
     )
     const expectedPaths = [
       "/dashboard",
-      "/dashboard/ManageContents",
-      "/dashboard/ViewPosition",
-      "/dashboard/AreaManagement",
-      "/dashboard/UserAccountManagement",
-      "/dashboard/AccountSettingManagement",
+      "/dashboard/manage-contents",
+      "/dashboard/view-position",
+      "/dashboard/area-management",
+      "/dashboard/user-account-management",
+      "/dashboard/account-setting-management",
     ]
     for (const path of expectedPaths) {
       expect(content).toContain(`"${path}"`)
@@ -66,7 +66,7 @@ describe("App Router migration: dashboard route parity", () => {
     ]
     for (const file of files) {
       const content = readFileSync(resolve(root, file), "utf-8")
-      // Should use /dashboard/Login or /dashboard/PasswordReset paths
+      // Should use /dashboard/login or /dashboard/password-reset paths
       if (content.includes("router.push")) {
         expect(content).toMatch(/router\.push\(["']\/dashboard/)
       }

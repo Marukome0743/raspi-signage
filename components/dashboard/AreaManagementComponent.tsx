@@ -1,23 +1,15 @@
 import CancelIcon from "@mui/icons-material/Cancel"
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  Grid,
-  IconButton,
-  Paper,
-  Typography,
-} from "@mui/material"
-import { useRouter } from "next/navigation"
+import { Box, Button, Grid, IconButton, Paper, Typography } from "@mui/material"
 import { useEffect, useState } from "react"
-import type { ContentListItem } from "../../src/supabase/database.types"
-import { getContentsDataClient } from "../../utilities/getContentDataClient"
 import {
   createContentsData,
   deleteContentsData,
+  getContentsDataClient,
+  mapContentToListItem,
   updateContentsData,
-} from "../../utilities/setContentData"
+} from "@/src/services/contents"
+import type { ContentListItem } from "@/src/supabase/database.types"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 function AreaManagementComponent(): React.JSX.Element {
@@ -30,31 +22,13 @@ function AreaManagementComponent(): React.JSX.Element {
   const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
   const [updateAreaDisplay, setUpdateAreaDisplay] = useState<boolean[]>([])
-  const { uid, isAdmin, setProgress } = useOrderContext()
-
-  const router = useRouter()
+  const { setProgress } = useOrderContext()
 
   useEffect(() => {
-    if (
-      sessionStorage.getItem("uid") &&
-      sessionStorage.getItem("management") !== "true"
-    ) {
-      router.push("/dashboard")
-    } else if (sessionStorage.getItem("uid") !== "true" && (!uid || !isAdmin)) {
-      router.push("/dashboard/Login")
-    }
     async function getAreaInfoData(): Promise<void> {
       const contents = await getContentsDataClient()
-      if (!contents) {
-        return
-      }
-      const mappedContents: ContentListItem[] = contents.map((c) => ({
-        areaId: c.area_id,
-        areaName: c.area_name,
-        orderId: c.order_id,
-        pixelSizeId: c.pixel_size_id,
-        delete: c.deleted,
-      }))
+      const mappedContents: ContentListItem[] =
+        contents.map(mapContentToListItem)
       mappedContents.sort((a, b) => {
         return Number(a.areaId) - Number(b.areaId)
       })
@@ -70,7 +44,7 @@ function AreaManagementComponent(): React.JSX.Element {
       setAreaNameList(areaList)
     }
     getAreaInfoData()
-  }, [isAdmin, router.push, uid])
+  }, [])
 
   const updateArea = (index: number): void => {
     const list = updateAreaDisplay.map((display, i) =>
@@ -90,7 +64,9 @@ function AreaManagementComponent(): React.JSX.Element {
       setProgress(true)
       await createContentsData(areaName)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -110,7 +86,9 @@ function AreaManagementComponent(): React.JSX.Element {
       setProgress(true)
       await updateContentsData(index, contents_list, areaNameList[index])
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -132,7 +110,9 @@ function AreaManagementComponent(): React.JSX.Element {
       setProgress(true)
       await deleteContentsData(index, contents_list)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -198,8 +178,8 @@ function AreaManagementComponent(): React.JSX.Element {
                           style={{ width: "40%" }}
                           name={"areaName"}
                           placeholder={"例：関東"}
-                          onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                            setAreaName((e.target as HTMLInputElement).value)
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setAreaName(e.target.value)
                           }
                         />
                       </Grid>
@@ -282,12 +262,9 @@ function AreaManagementComponent(): React.JSX.Element {
                             }}
                             name={`areaNameList[${index}]`}
                             placeholder={"例：関東"}
-                            onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                              setAreaNames(
-                                (e.target as HTMLInputElement).value,
-                                index,
-                              )
-                            }
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setAreaNames(e.target.value, index)}
                           />
                           <Button
                             variant="contained"
@@ -318,15 +295,12 @@ function AreaManagementComponent(): React.JSX.Element {
           </>
         )}
       </Box>
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </>
   )
 }

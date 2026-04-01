@@ -24,9 +24,9 @@ import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import { usePathname, useRouter } from "next/navigation"
 import * as React from "react"
-import { supabase } from "../../src/supabase/client"
-import type { ContentListItem } from "../../src/supabase/database.types"
-import { getContentList } from "../../utilities/getContentDataClient"
+import { getContentList } from "@/src/services/contents"
+import { createClient } from "@/src/supabase/client"
+import type { ContentListItem } from "@/src/supabase/database.types"
 import { MainListItems } from "./ListItems"
 import { OrderProvider, useOrderContext } from "./OrderContext"
 
@@ -103,10 +103,10 @@ const mdTheme = createTheme()
 
 const AREA_DISPLAY_PATHS = [
   "/dashboard",
-  "/dashboard/ManageContents",
-  "/dashboard/ViewPosition",
+  "/dashboard/manage-contents",
+  "/dashboard/view-position",
 ]
-const PASS_PATHS = ["/dashboard/PasswordReset"]
+const PASS_PATHS = ["/dashboard/password-reset"]
 
 function DashboardContent({ children }: DashboardProps) {
   const [open, setOpen] = React.useState<boolean>(false)
@@ -141,15 +141,10 @@ function DashboardContent({ children }: DashboardProps) {
     setOrderId(contentsObjArr[selectedIndex].orderId)
   }
 
-  //  React.useEffect(() => {
-  //    setU_id(sessionStorage.getItem('uid') ? sessionStorage.getItem('uid') : uid);
-  //  }, [uid])
   React.useEffect(() => {
     async function getContentAreaData() {
-      const storedArea = sessionStorage.getItem("coverageArea")
-      const coverageAreaList = storedArea ? storedArea.split(",") : coverageArea
-      if (coverageAreaList.length > 0) {
-        const contents = await getContentList(coverageAreaList)
+      if (coverageArea.length > 0) {
+        const contents = await getContentList(coverageArea)
         if (contents && contents.length > 0) {
           setContentsObjArr(contents)
           setArea(contents[0].areaName)
@@ -169,29 +164,23 @@ function DashboardContent({ children }: DashboardProps) {
   }, [coverageArea, setOrderId])
 
   React.useEffect(() => {
-    const storedUid = sessionStorage.getItem("uid")
-    if (storedUid) {
-      setUid(storedUid)
-    }
     if (uid) {
-      const storedUserName = sessionStorage.getItem("userName")
-      setName(storedUserName ?? userName ?? "")
+      setName(userName ?? "")
     }
-  }, [uid, userName, setUid])
+  }, [uid, userName])
 
   const onClickLogout = async () => {
     setName("")
+    const supabase = createClient()
     await supabase.auth
       .signOut()
       .then(() => {
-        sessionStorage.clear()
         setUid("")
         setUserName("")
-        router.push("/dashboard/Login")
+        router.push("/dashboard/login")
       })
-      .catch((e) => {
+      .catch(() => {
         alert("ログアウトに失敗しました")
-        console.log(e)
       })
   }
 

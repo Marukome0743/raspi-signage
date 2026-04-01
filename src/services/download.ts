@@ -1,4 +1,4 @@
-import { supabase } from "../src/supabase/client"
+import { createClient } from "@/src/supabase/client"
 
 const BUCKET = "signage-contents"
 
@@ -7,6 +7,7 @@ export const downLoadURLList = async ({
 }: {
   areaId: string
 }): Promise<string[]> => {
+  const supabase = createClient()
   const { data: files, error } = await supabase.storage
     .from(BUCKET)
     .list(areaId)

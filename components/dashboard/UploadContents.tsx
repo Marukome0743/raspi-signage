@@ -2,17 +2,14 @@ import CancelIcon from "@mui/icons-material/Cancel"
 import {
   Box,
   Button,
-  Dialog,
-  DialogContent,
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
-  Typography,
 } from "@mui/material"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
-import { postContent } from "../../utilities/upload"
+import { postContent } from "@/src/services/upload"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 type UploadType = "image" | "video"
@@ -29,16 +26,9 @@ function UploadContents(): React.JSX.Element {
   const [error, setError] = useState<ErrorMessage>("")
   const [errorPart, setErrorPart] = useState<ErrorPart>("")
   const [showError, setShowError] = useState<boolean>(false)
-  const { orderId, uid, setProgress } = useOrderContext()
+  const { orderId, setProgress } = useOrderContext()
   const maxImageUpload = 4
   const inputId = Math.random().toString(32).substring(2)
-
-  const router = useRouter()
-  useEffect(() => {
-    if (!sessionStorage.getItem("uid") && !uid) {
-      router.push("/dashboard/Login")
-    }
-  }, [router.push, uid])
 
   const handleOnUpload = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -62,7 +52,9 @@ function UploadContents(): React.JSX.Element {
       setImages([])
       setPreviews([])
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -233,15 +225,12 @@ function UploadContents(): React.JSX.Element {
           })}
         </div>
       </form>
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </div>
   )
 }

@@ -24,17 +24,17 @@ const createBuilder = () => {
   return builder
 }
 
-mock.module("../../../src/supabase/server", () => ({
-  supabaseAdmin: {
+mock.module("../../../src/supabase/admin", () => ({
+  createAdminClient: () => ({
     from: (table: string) => {
       state.table = table
       return createBuilder()
     },
-  },
+  }),
 }))
 
 const { getContentDataAdmin, getOrderIdAdmin } = await import(
-  "../../../utilities/getContentDataAdmin"
+  "../../../src/services/contents-admin"
 )
 
 describe("getContentDataAdmin", () => {

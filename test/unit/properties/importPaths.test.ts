@@ -77,7 +77,7 @@ function referencesJsFile(importPath: string): boolean {
   return /\.js$/.test(importPath)
 }
 
-const TARGET_DIRS = ["app", "components", "src", "utilities"]
+const TARGET_DIRS = ["app", "components", "src"]
 const allTsFiles = collectTsFiles(TARGET_DIRS)
 
 describe("Property 4: Import path integrity", () => {

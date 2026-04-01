@@ -20,8 +20,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogContent,
   FormControlLabel,
   Grid,
   IconButton,
@@ -30,11 +28,15 @@ import {
   Paper,
   Typography,
 } from "@mui/material"
-import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { useEffect, useState } from "react"
-import type { ContentItem, Order } from "../../src/supabase/database.types"
-import { getContentDataClient } from "../../utilities/getContentDataClient"
-import { setContentOrder } from "../../utilities/setContentData"
+import {
+  filterActiveDisplayItems,
+  getOrderById,
+  setContentOrder,
+} from "@/src/services/contents"
+import type { ContentItem, Order } from "@/src/supabase/database.types"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 interface DisplayContentItem extends ContentItem {
@@ -105,11 +107,14 @@ function SortableItem({
           </Grid>
           <Grid size={3} style={{ minWidth: "280px" }}>
             {content.type === "image" ? (
-              // biome-ignore lint/performance/noImgElement: external Supabase Storage URL
-              <img
+              <Image
                 src={content.path}
+                width={0}
+                height={0}
+                unoptimized
                 style={{
                   width: "30vh",
+                  height: "auto",
                   objectFit: "contain",
                   margin: "1rem",
                 }}
@@ -152,11 +157,8 @@ function SortableItem({
                   name={name + index}
                   disabled={content.type === "video"}
                   placeholder={String(Number(content.viewTime / 1000))}
-                  onInput={(event: React.FormEvent<HTMLInputElement>) =>
-                    eventHandler(
-                      event as React.ChangeEvent<HTMLInputElement>,
-                      index,
-                    )
+                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                    eventHandler(event, index)
                   }
                 />
               </Grid>
@@ -198,31 +200,19 @@ function ManageContentsView(): React.JSX.Element {
   const [errorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
 
-  const { uid, orderId, setProgress } = useOrderContext()
-
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!sessionStorage.getItem("uid") && !uid) {
-      router.push("/dashboard/Login")
-    }
-  }, [router.push, uid])
+  const { orderId, setProgress } = useOrderContext()
 
   useEffect(() => {
     async function featchData(): Promise<void> {
       if (orderId == null) {
         return
       }
-      const obj = await getContentDataClient(`/order/${orderId}`)
+      const obj = await getOrderById(orderId)
       if (!obj) {
         return
       }
-      const display_filtered = obj.set1
-        .filter((obj: DisplayContentItem) => !obj.delete)
-        .filter((obj: DisplayContentItem) => Object.keys(obj).length)
-      const hidden_filtered = obj.hidden
-        .filter((obj: DisplayContentItem) => !obj.delete)
-        .filter((obj: DisplayContentItem) => Object.keys(obj).length)
+      const display_filtered = filterActiveDisplayItems(obj.set1)
+      const hidden_filtered = filterActiveDisplayItems(obj.hidden)
       setDisplay(display_filtered)
       setHidden(hidden_filtered)
     }
@@ -276,7 +266,9 @@ function ManageContentsView(): React.JSX.Element {
       }
       await setContentOrder(orderId, submitObj)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -304,7 +296,9 @@ function ManageContentsView(): React.JSX.Element {
       }
       await setContentOrder(orderId, submitObj)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -422,15 +416,12 @@ function ManageContentsView(): React.JSX.Element {
           </SortableContext>
         </DndContext>
       </Box>
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </>
   )
 }

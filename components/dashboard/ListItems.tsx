@@ -31,9 +31,6 @@ export const MainListItems = (props: MainListItemsProps) => {
     )
   }
 
-  const management = false
-  //  const management = (sessionStorage.getItem("management") === "true") ? true: false;
-
   return (
     <React.Fragment>
       <CustomlistItem
@@ -43,35 +40,35 @@ export const MainListItems = (props: MainListItemsProps) => {
         <UploadIcon />
       </CustomlistItem>
       <CustomlistItem
-        onClick={() => router.push("/dashboard/ManageContents")}
+        onClick={() => router.push("/dashboard/manage-contents")}
         text="コンテンツ変更"
       >
         <ChangeCircleIcon />
       </CustomlistItem>
       <CustomlistItem
-        onClick={() => router.push("/dashboard/ViewPosition")}
+        onClick={() => router.push("/dashboard/view-position")}
         text="表示画面調整"
       >
         <DisplayIcon />
       </CustomlistItem>
-      {(management || props.isAdmin) && (
+      {props.isAdmin && (
         <CustomlistItem
-          onClick={() => router.push("/dashboard/AreaManagement")}
+          onClick={() => router.push("/dashboard/area-management")}
           text="エリア管理"
         >
           <AddBusinessIcon />
         </CustomlistItem>
       )}
-      {(management || props.isAdmin) && (
+      {props.isAdmin && (
         <CustomlistItem
-          onClick={() => router.push("/dashboard/UserAccountManagement")}
+          onClick={() => router.push("/dashboard/user-account-management")}
           text="アカウント一覧管理"
         >
           <AccountBalanceIcon />
         </CustomlistItem>
       )}
       <CustomlistItem
-        onClick={() => router.push("/dashboard/AccountSettingManagement")}
+        onClick={() => router.push("/dashboard/account-setting-management")}
         text="アカウント詳細管理"
       >
         <ManageAccountsIcon />

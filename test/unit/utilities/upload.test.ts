@@ -28,7 +28,7 @@ const createBuilder = (table: string) => {
 }
 
 mock.module("../../../src/supabase/client", () => ({
-  supabase: {
+  createClient: () => ({
     from: (table: string) => createBuilder(table),
     storage: {
       from: () => ({
@@ -43,16 +43,16 @@ mock.module("../../../src/supabase/client", () => ({
         }),
       }),
     },
-  },
+  }),
 }))
 
-mock.module("../../../utilities/setContentData", () => ({
+mock.module("../../../src/services/contents", () => ({
   updateContentOrder: mock(() => Promise.resolve()),
 }))
 
-const { postContent } = await import("../../../utilities/upload")
+const { postContent } = await import("../../../src/services/upload")
 const { updateContentOrder } = (await import(
-  "../../../utilities/setContentData"
+  "../../../src/services/contents"
 )) as {
   updateContentOrder: ReturnType<typeof mock> &
     ((...args: unknown[]) => Promise<void>)

@@ -1,0 +1,5 @@
+.content_media {
+  position: absolute;
+  transition: all 1s ease-in-out;
+  opacity: 0;
+}

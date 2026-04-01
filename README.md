@@ -2,14 +2,6 @@
 
 Digital signage system with Raspberry Pi
 
-## Frontend
-
-This frontend uses [React](https://react.dev/) and [TypeScript](https://www.typescriptlang.org/).
-
-## Style Guide
-
-Follow [Airbnb React/JSX Style Guide](https://github.com/airbnb/javascript/blob/master/react/README.md).
-
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
@@ -31,11 +23,21 @@ This starts all Supabase services via Docker. After startup, the CLI outputs the
 
 ### 2. Configure environment variables
 
+Create a `.env` file in the project root:
+
 ```bash
-cp .env.local.example .env.local
+touch .env
 ```
 
-The default values in `.env.local.example` match the local Supabase instance. No changes needed for local development.
+Set the following environment variables. The values below are defaults for the local Supabase instance.
+
+| Variable | Description | Local default |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase API URL | `http://127.0.0.1:54321` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | `anon key` from `supabase start` output |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | `service_role key` from `supabase start` output |
+
+> **Note:** `.env` is included in `.gitignore`. Do not commit secrets to the repository.
 
 ### 3. Seed the database
 
@@ -47,8 +49,8 @@ This runs migrations and seeds the database with initial data:
 
 | Account | Email | Password | Role |
 | --- | --- | --- | --- |
-| Admin | <admin@example.com> | password123 | 管理者 |
-| User | <user@example.com> | password123 | 一般ユーザー |
+| Admin | <admin@example.com> | password123 | Admin |
+| User | <user@example.com> | password123 | General User |
 
 Seed data includes 2 areas (関東, 関西) with corresponding orders and pixel size settings.
 

@@ -1,26 +1,23 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 import type { Database } from "./database.types"
 
-let _supabaseAdmin: SupabaseClient<Database> | null = null
-
-export const getSupabaseAdmin = (): SupabaseClient<Database> => {
-  if (!_supabaseAdmin) {
-    _supabaseAdmin = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    )
-  }
-  return _supabaseAdmin
-}
-
-// For backward compatibility - lazy getter that preserves full type information
-export const supabaseAdmin: SupabaseClient<Database> = new Proxy(
-  {} as SupabaseClient<Database>,
-  {
-    get(_target, prop: string | symbol) {
-      return (
-        getSupabaseAdmin() as unknown as Record<string | symbol, unknown>
-      )[prop]
+export async function createClient() {
+  const cookieStore = await cookies()
+  return createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          for (const { name, value, options } of cookiesToSet) {
+            cookieStore.set(name, value, options)
+          }
+        },
+      },
     },
-  },
-)
+  )
+}

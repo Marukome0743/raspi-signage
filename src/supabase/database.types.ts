@@ -91,32 +91,25 @@ export interface PixelSizeInfo {
   getPixelFlg: boolean
 }
 
-export interface UserAccount {
-  uid: string
+interface BaseUserFields {
   email: string
   userName: string
   management: boolean
   coverageArea: string[]
   passFlg: boolean
+}
+
+export interface UserAccount extends BaseUserFields {
+  uid: string
   delete: boolean
 }
 
-export interface AccountData {
-  email: string
-  userName: string
-  management: boolean
-  coverageArea: string[]
-  passFlg: boolean
+export interface AccountData extends BaseUserFields {
   delete: boolean
 }
 
-export interface LoginData {
+export interface LoginData extends BaseUserFields {
   uid: string
-  email: string
-  userName: string
-  management: boolean
-  coverageArea: string[]
-  passFlg: boolean
 }
 
 export interface ContentListItem {

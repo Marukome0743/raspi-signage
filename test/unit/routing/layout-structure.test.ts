@@ -13,22 +13,28 @@ describe("App Router migration: layout structure", () => {
     expect(content).toContain("</html>")
   })
 
-  test("root layout includes Emotion CacheProvider", () => {
+  test("root layout uses ThemeRegistry (which wraps CacheProvider, ThemeProvider, CssBaseline)", () => {
     const content = readFileSync(resolve(root, "app/layout.tsx"), "utf-8")
-    expect(content).toContain("CacheProvider")
-    expect(content).toContain("createEmotionCache")
+    expect(content).toContain("ThemeRegistry")
+    // ThemeRegistry contains the actual providers
+    const themeRegistry = readFileSync(
+      resolve(root, "components/ThemeRegistry.tsx"),
+      "utf-8",
+    )
+    expect(themeRegistry).toContain("CacheProvider")
+    expect(themeRegistry).toContain("ThemeProvider")
+    expect(themeRegistry).toContain("CssBaseline")
   })
 
-  test("root layout includes MUI ThemeProvider and CssBaseline", () => {
+  test("root layout is a server component (no 'use client')", () => {
     const content = readFileSync(resolve(root, "app/layout.tsx"), "utf-8")
-    expect(content).toContain("ThemeProvider")
-    expect(content).toContain("CssBaseline")
+    expect(content).not.toContain('"use client"')
   })
 
   test("root layout accepts and renders children", () => {
     const content = readFileSync(resolve(root, "app/layout.tsx"), "utf-8")
     expect(content).toContain("{children}")
-    expect(content).toMatch(/function\s+RootLayout\s*\(\s*\{\s*children\s*\}/)
+    expect(content).toContain("RootLayout")
   })
 
   test("dashboard layout wraps children with Dashboard component", () => {

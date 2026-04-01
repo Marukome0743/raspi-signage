@@ -1,28 +1,20 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  Grid,
-  Paper,
-  Typography,
-} from "@mui/material"
-import { useRouter } from "next/navigation"
+import { Box, Button, Grid, Paper, Typography } from "@mui/material"
+import Image from "next/image"
 import { useEffect, useState } from "react"
-import type {
-  ContentItem,
-  PixelSizeInfo,
-} from "../../src/supabase/database.types"
+import { formRowSx } from "@/components/dashboard/styles"
 import {
-  getContentDataClient,
+  filterActiveDisplayItems,
   getContentPixelSize,
   getContentPixelSizeId,
-} from "../../utilities/getContentDataClient"
+  getOrderById,
+} from "@/src/services/contents"
 import {
   createDisplayContent,
   resetPixelSize,
   updateDisplayContent,
-} from "../../utilities/setContentData"
+} from "@/src/services/pixel-sizes"
+import type { ContentItem, PixelSizeInfo } from "@/src/supabase/database.types"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 interface DisplayContentItem extends ContentItem {
@@ -43,15 +35,7 @@ function ViewPositionComponent(): React.JSX.Element {
   const [error, setError] = useState<string>("")
   const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
-  const { uid, orderId, setProgress } = useOrderContext()
-
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!sessionStorage.getItem("uid") && !uid) {
-      router.push("/dashboard/Login")
-    }
-  }, [router.push, uid])
+  const { orderId, setProgress } = useOrderContext()
 
   useEffect(() => {
     async function featchData(): Promise<void> {
@@ -79,16 +63,12 @@ function ViewPositionComponent(): React.JSX.Element {
       if (orderId == null) {
         return
       }
-      const obj = await getContentDataClient(`/order/${orderId}`)
+      const obj = await getOrderById(orderId)
       if (!obj) {
         return
       }
-      const display_filtered = obj.set1
-        .filter((obj: DisplayContentItem) => !obj.delete)
-        .filter((obj: DisplayContentItem) => Object.keys(obj).length)
-      const hidden_filtered = obj.hidden
-        .filter((obj: DisplayContentItem) => !obj.delete)
-        .filter((obj: DisplayContentItem) => Object.keys(obj).length)
+      const display_filtered = filterActiveDisplayItems(obj.set1)
+      const hidden_filtered = filterActiveDisplayItems(obj.hidden)
       if (display_filtered.length !== 0) {
         setContentsList(display_filtered[0])
       } else if (hidden_filtered.length !== 0) {
@@ -110,7 +90,9 @@ function ViewPositionComponent(): React.JSX.Element {
       }
       await createDisplayContent(orderId, pixel)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -139,7 +121,9 @@ function ViewPositionComponent(): React.JSX.Element {
         marginLeft,
       )
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -153,7 +137,9 @@ function ViewPositionComponent(): React.JSX.Element {
         "ラズパイサイネージを起動することでサイネージ画面枠の値を再取得出来ます",
       )
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -232,14 +218,7 @@ function ViewPositionComponent(): React.JSX.Element {
                     direction="column"
                     style={{ padding: "20px", paddingTop: "10px" }}
                   >
-                    <Grid
-                      style={{
-                        display: "flex",
-                        minWidth: "550px",
-                        height: "45px",
-                        padding: "5px",
-                      }}
-                    >
+                    <Grid sx={formRowSx}>
                       <Typography style={{ width: "33%", lineHeight: "35px" }}>
                         サイネージ画像(高さ)：{" "}
                       </Typography>
@@ -248,21 +227,12 @@ function ViewPositionComponent(): React.JSX.Element {
                         style={{ width: "20%" }}
                         name={"height"}
                         placeholder={String(pixelSize.height)}
-                        onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                          setHeight(
-                            Number((e.target as HTMLInputElement).value),
-                          )
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setHeight(Number(e.target.value))
                         }
                       />
                     </Grid>
-                    <Grid
-                      style={{
-                        display: "flex",
-                        minWidth: "550px",
-                        height: "45px",
-                        padding: "5px",
-                      }}
-                    >
+                    <Grid sx={formRowSx}>
                       <Typography style={{ width: "33%", lineHeight: "35px" }}>
                         サイネージ画像(幅)：{" "}
                       </Typography>
@@ -271,19 +241,12 @@ function ViewPositionComponent(): React.JSX.Element {
                         style={{ width: "20%" }}
                         name={"width"}
                         placeholder={String(pixelSize.width)}
-                        onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                          setWidth(Number((e.target as HTMLInputElement).value))
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setWidth(Number(e.target.value))
                         }
                       />
                     </Grid>
-                    <Grid
-                      style={{
-                        display: "flex",
-                        minWidth: "550px",
-                        height: "45px",
-                        padding: "5px",
-                      }}
-                    >
+                    <Grid sx={formRowSx}>
                       <Typography style={{ width: "33%", lineHeight: "35px" }}>
                         サイネージ上部余白：{" "}
                       </Typography>
@@ -292,21 +255,12 @@ function ViewPositionComponent(): React.JSX.Element {
                         style={{ width: "20%" }}
                         name={"marginTop"}
                         placeholder={String(pixelSize.marginTop)}
-                        onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                          setMarginTop(
-                            Number((e.target as HTMLInputElement).value),
-                          )
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setMarginTop(Number(e.target.value))
                         }
                       />
                     </Grid>
-                    <Grid
-                      style={{
-                        display: "flex",
-                        minWidth: "550px",
-                        height: "45px",
-                        padding: "5px",
-                      }}
-                    >
+                    <Grid sx={formRowSx}>
                       <Typography style={{ width: "33%", lineHeight: "35px" }}>
                         サイネージ左部余白：{" "}
                       </Typography>
@@ -315,10 +269,8 @@ function ViewPositionComponent(): React.JSX.Element {
                         style={{ width: "20%" }}
                         name={"marginLeft"}
                         placeholder={String(pixelSize.marginLeft)}
-                        onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                          setMarginLeft(
-                            Number((e.target as HTMLInputElement).value),
-                          )
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setMarginLeft(Number(e.target.value))
                         }
                       />
                     </Grid>
@@ -355,9 +307,11 @@ function ViewPositionComponent(): React.JSX.Element {
                       >
                         {contents_list ? (
                           contents_list.type === "image" ? (
-                            // biome-ignore lint/performance/noImgElement: external Supabase Storage URL
-                            <img
+                            <Image
                               src={contents_list.path}
+                              width={0}
+                              height={0}
+                              unoptimized
                               style={{
                                 height: height / 10,
                                 width: width / 10,
@@ -397,15 +351,12 @@ function ViewPositionComponent(): React.JSX.Element {
           </>
         )}
       </Box>
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </>
   )
 }

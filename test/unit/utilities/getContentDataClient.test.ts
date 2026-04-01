@@ -36,7 +36,7 @@ const createBuilder = () => {
 }
 
 mock.module("../../../src/supabase/client", () => ({
-  supabase: {
+  createClient: () => ({
     from: (table: string) => {
       state.table = table
       return createBuilder()
@@ -44,20 +44,33 @@ mock.module("../../../src/supabase/client", () => ({
     auth: {
       signInWithPassword: () => Promise.resolve(state.authResult),
     },
-  },
+  }),
 }))
+
+mock.module("@/src/supabase/client", () => ({
+  createClient: () => ({
+    from: (table: string) => {
+      state.table = table
+      return createBuilder()
+    },
+    auth: {
+      signInWithPassword: () => Promise.resolve(state.authResult),
+    },
+  }),
+}))
+
+const { getUserAccountList } = await import("../../../src/services/users")
 
 const {
   getContentsDataClient,
-  getContentDataClient,
+  getOrderById,
   getContentPixelSizeId,
   getContentPixelSize,
-  getUserAccountList,
-  getAccountDataClient,
-  getAccountLoginData,
-  checkAccountPassKey,
   getContentList,
-} = await import("../../../utilities/getContentDataClient")
+} = await import("../../../src/services/contents")
+
+const { getAccountDataClient, getAccountLoginData, checkAccountPassKey } =
+  await import("../../../src/services/auth")
 
 describe("getContentsDataClient", () => {
   test("returns data array when contents exist", async () => {
@@ -79,18 +92,18 @@ describe("getContentsDataClient", () => {
   })
 })
 
-describe("getContentDataClient", () => {
+describe("getOrderById", () => {
   test("queries orders table with correct id", async () => {
     const mockOrder = { id: "abc-123", set1: [], hidden: [] }
     state.queryResult = { data: mockOrder, error: null }
-    const result = await getContentDataClient("/order/abc-123")
+    const result = await getOrderById("abc-123")
     expect(state.table).toBe("orders")
     expect(result).toEqual(mockOrder)
   })
 
-  test("returns null for non-order target", async () => {
-    const result = await getContentDataClient("/unknown/abc")
-    expect(result).toBeNull()
+  test("throws SupabaseQueryError when error occurs", async () => {
+    state.queryResult = { data: null, error: { message: "not found" } }
+    expect(getOrderById("nonexistent")).rejects.toThrow("not found")
   })
 })
 
@@ -165,10 +178,10 @@ describe("getUserAccountList", () => {
     expect(result?.[0].management).toBe(true)
   })
 
-  test("returns null when no data", async () => {
+  test("returns empty array when no data", async () => {
     state.queryResult = { data: null, error: null }
     const result = await getUserAccountList()
-    expect(result).toBeNull()
+    expect(result).toEqual([])
   })
 })
 
@@ -295,21 +308,21 @@ describe("getContentList", () => {
     expect(result?.[0].orderId).toBe("o1")
   })
 
-  test("returns null when no data", async () => {
+  test("returns empty array when no data", async () => {
     state.queryResult = { data: null, error: null }
     const result = await getContentList(["0"])
-    expect(result).toBeNull()
+    expect(result).toEqual([])
   })
 })
 
-describe("Property: getContentDataClient path parsing", () => {
+describe("Property: getOrderById queries orders table", () => {
   const orderIdArb = fc.uuid()
 
-  test("always queries orders table for /order/{id} paths", async () => {
+  test("always queries orders table for any orderId", async () => {
     await fc.assert(
       fc.asyncProperty(orderIdArb, async (id: string) => {
         state.queryResult = { data: { id, set1: [], hidden: [] }, error: null }
-        await getContentDataClient(`/order/${id}`)
+        await getOrderById(id)
         expect(state.table).toBe("orders")
       }),
       { numRuns: 50 },

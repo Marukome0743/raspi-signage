@@ -2,12 +2,8 @@ import LockOutlinedIcon from "@mui/icons-material/LockOutlined"
 import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
-import Checkbox from "@mui/material/Checkbox"
 import Container from "@mui/material/Container"
 import CssBaseline from "@mui/material/CssBaseline"
-import Dialog from "@mui/material/Dialog"
-import DialogContent from "@mui/material/DialogContent"
-import FormControlLabel from "@mui/material/FormControlLabel"
 import Grid from "@mui/material/Grid"
 import Link from "@mui/material/Link"
 import Snackbar from "@mui/material/Snackbar"
@@ -16,8 +12,8 @@ import Typography from "@mui/material/Typography"
 import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
-//import SnackBar from './CustomizedSnackbars';
-import { getAccountLoginData } from "../../utilities/getContentDataClient"
+import { getAccountLoginData } from "@/src/services/auth"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 interface SnackbarStatus {
@@ -29,7 +25,6 @@ interface SnackbarStatus {
 function LoginComponent(): React.JSX.Element {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
-  const [loginFlg, setLoginFlg] = useState<boolean>(false)
   const [status, setStatus] = useState<SnackbarStatus>({
     open: false,
     type: "",
@@ -75,7 +70,7 @@ function LoginComponent(): React.JSX.Element {
         setUid(user.uid)
         console.log(user)
         if (user.passFlg) {
-          router.push("/dashboard/PasswordReset")
+          router.push("/dashboard/password-reset")
           return
         }
         setUserName(user.userName)
@@ -83,25 +78,13 @@ function LoginComponent(): React.JSX.Element {
         if (user.management) {
           setIsAdmin(true)
         }
-        if (loginFlg) {
-          sessionStorage.setItem("uid", user.uid)
-          sessionStorage.setItem("userName", user.userName)
-          sessionStorage.setItem("management", String(user.management))
-          sessionStorage.setItem(
-            "coverageArea",
-            user.coverageArea ? user.coverageArea.join() : "",
-          )
-        } else {
-          sessionStorage.setItem("uid", "")
-          sessionStorage.setItem("userName", "")
-          sessionStorage.setItem("management", "")
-          sessionStorage.setItem("coverageArea", "")
-        }
 
         router.push("/dashboard")
       }
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
       setError("ログイン失敗しました。メールアドレスかパスワードが異なります")
       setErrorPart("ログイン")
       setShowError(true)
@@ -139,8 +122,8 @@ function LoginComponent(): React.JSX.Element {
             label="e-mail"
             name="email"
             autoComplete="email"
-            onInput={(e: React.FormEvent<HTMLDivElement>) =>
-              setEmail((e.target as HTMLInputElement).value)
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setEmail(e.target.value)
             }
             autoFocus
           />
@@ -153,20 +136,9 @@ function LoginComponent(): React.JSX.Element {
             type="password"
             id="password"
             autoComplete="current-password"
-            onInput={(e: React.FormEvent<HTMLDivElement>) =>
-              setPassword((e.target as HTMLInputElement).value)
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPassword(e.target.value)
             }
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                name={"loginFlg"}
-                checked={loginFlg}
-                onChange={() => setLoginFlg(!loginFlg)}
-                color="primary"
-              />
-            }
-            label="ログインを維持する"
           />
           <Button
             type="submit"
@@ -202,15 +174,12 @@ function LoginComponent(): React.JSX.Element {
         message={status.message}
         style={{ position: "relative" }}
       />
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </Container>
   )
 }

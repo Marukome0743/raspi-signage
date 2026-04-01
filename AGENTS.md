@@ -46,7 +46,6 @@ bun run test:e2e          # E2E tests (Playwright)
 
 ## Code style
 
-- Follow [Airbnb React/JSX Style Guide](https://github.com/airbnb/javascript/blob/master/react/README.md)
 - Linting and formatting managed by Biome
 - No semicolons, space indentation
 - Unused imports are errors (`noUnusedImports: "error"`)
@@ -75,7 +74,6 @@ test/                     # Tests (unit/, e2e/)
 ## Security
 
 - Never hardcode secret keys or API keys in source code
-- Environment variables are managed in `.env.local` (gitignored)
 - Replace PII (personally identifiable information) with placeholders
 - See `SECURITY.md` for details
 

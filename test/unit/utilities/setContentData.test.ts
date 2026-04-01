@@ -83,7 +83,7 @@ const createBuilder = () => {
 }
 
 mock.module("../../../src/supabase/client", () => ({
-  supabase: {
+  createClient: () => ({
     from: (table: string) => {
       state.table = table
       return createBuilder()
@@ -92,11 +92,24 @@ mock.module("../../../src/supabase/client", () => ({
       signInWithPassword: () => Promise.resolve({ error: state.signInError }),
       updateUser: () => Promise.resolve({ error: state.updateUserError }),
     },
-  },
+  }),
 }))
 
-mock.module("../../../src/supabase/server", () => ({
-  supabaseAdmin: {
+mock.module("@/src/supabase/client", () => ({
+  createClient: () => ({
+    from: (table: string) => {
+      state.table = table
+      return createBuilder()
+    },
+    auth: {
+      signInWithPassword: () => Promise.resolve({ error: state.signInError }),
+      updateUser: () => Promise.resolve({ error: state.updateUserError }),
+    },
+  }),
+}))
+
+mock.module("../../../src/supabase/admin", () => ({
+  createAdminClient: () => ({
     from: (table: string) => {
       state.table = table
       return createBuilder()
@@ -106,23 +119,26 @@ mock.module("../../../src/supabase/server", () => ({
         createUser: () => Promise.resolve(state.adminAuthResult),
       },
     },
-  },
+  }),
 }))
 
 const {
-  setContentOrder,
-  updateContentOrder,
   setContentPixelSize,
   createDisplayContent,
   updateDisplayContent,
   resetPixelSize,
+} = await import("../../../src/services/pixel-sizes")
+
+const { createAccountData, updateAccountData, deleteAccountData } =
+  await import("../../../src/services/accounts")
+
+const {
+  setContentOrder,
+  updateContentOrder,
   createContentsData,
   updateContentsData,
   deleteContentsData,
-  createAccountData,
-  updateAccountData,
-  deleteAccountData,
-} = await import("../../../utilities/setContentData")
+} = await import("../../../src/services/contents")
 
 describe("setContentOrder", () => {
   test("upserts to orders table", async () => {
@@ -302,20 +318,20 @@ describe("createAccountData", () => {
     expect(state.params?.user_name).toBe("テスト")
   })
 
-  test("does not insert user when auth fails", async () => {
+  test("throws when auth fails", async () => {
     state.adminAuthResult = {
       data: { user: null },
       error: { message: "already exists" },
     }
     state.table = null
     state.operation = null
-    await createAccountData(
-      "dup@example.com",
-      "pass",
-      {} as Parameters<typeof createAccountData>[2],
-    )
-    // table should not have been set to "users" for insert
-    expect(state.operation).toBeNull()
+    expect(
+      createAccountData(
+        "dup@example.com",
+        "pass",
+        {} as Parameters<typeof createAccountData>[2],
+      ),
+    ).rejects.toThrow("already exists")
   })
 })
 
@@ -349,7 +365,7 @@ describe("updateAccountData", () => {
     })
   })
 
-  test("aborts when signIn fails", async () => {
+  test("throws when signIn fails", async () => {
     state.signInError = { message: "bad password" }
     state.table = null
     state.operation = null
@@ -358,11 +374,12 @@ describe("updateAccountData", () => {
       management: false,
       coverageArea: [] as string[],
     }
-    await updateAccountData("uid-1", user, "a@example.com", "wrong", "new")
-    expect(state.operation).toBeNull()
+    expect(
+      updateAccountData("uid-1", user, "a@example.com", "wrong", "new"),
+    ).rejects.toThrow("bad password")
   })
 
-  test("aborts when updateUser fails", async () => {
+  test("throws when updateUser fails", async () => {
     state.signInError = null
     state.updateUserError = { message: "update failed" }
     state.table = null
@@ -372,8 +389,9 @@ describe("updateAccountData", () => {
       management: false,
       coverageArea: [] as string[],
     }
-    await updateAccountData("uid-1", user, "a@example.com", "old", "new")
-    expect(state.operation).toBeNull()
+    expect(
+      updateAccountData("uid-1", user, "a@example.com", "old", "new"),
+    ).rejects.toThrow("update failed")
   })
 })
 

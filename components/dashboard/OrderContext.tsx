@@ -2,8 +2,8 @@ import type { User } from "@supabase/supabase-js"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { supabase } from "../../src/supabase/client"
-import type { OrderContextValue } from "../../src/supabase/database.types"
+import { createClient } from "@/src/supabase/client"
+import type { OrderContextValue } from "@/src/supabase/database.types"
 
 const OrderContext = createContext<OrderContextValue | undefined>(undefined)
 
@@ -28,16 +28,17 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
 
   const router = useRouter()
   const pathname = usePathname()
-  const isAvailableForViewing = pathname === "/dashboard/Login"
+  const isAvailableForViewing = pathname === "/dashboard/login"
 
   useEffect(() => {
+    const supabase = createClient()
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_, session) => {
       const user = session?.user ?? null
       setCurrentUser(user)
       if (!user && !isAvailableForViewing) {
-        router.push("/dashboard/Login")
+        router.push("/dashboard/login")
       }
     })
     return () => {

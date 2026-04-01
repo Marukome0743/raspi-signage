@@ -1,37 +1,27 @@
-"use client"
+import type { Metadata } from "next"
+import { Roboto } from "next/font/google"
+import ThemeRegistry from "@/components/ThemeRegistry"
 
-import { CacheProvider } from "@emotion/react"
-import CssBaseline from "@mui/material/CssBaseline"
-import { ThemeProvider } from "@mui/material/styles"
-import createEmotionCache from "../src/createEmotionCache"
-import theme from "../src/theme"
-import "../styles/globals.css"
+const roboto = Roboto({
+  weight: ["300", "400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+})
 
-interface RootLayoutProps {
-  children: React.ReactNode
+export const metadata: Metadata = {
+  title: "サイネージダッシュボード",
+  icons: { icon: "/favicon.ico" },
 }
 
-const clientSideEmotionCache = createEmotionCache()
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <head>
-        <meta name="theme-color" content={theme.palette.primary.main} />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-        />
-        <meta name="emotion-insertion-point" content="" />
-      </head>
+    <html lang="ja" className={roboto.className}>
       <body>
-        <CacheProvider value={clientSideEmotionCache}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </CacheProvider>
+        <ThemeRegistry>{children}</ThemeRegistry>
       </body>
     </html>
   )

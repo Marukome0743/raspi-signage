@@ -11,12 +11,12 @@ describe("App Router migration: file structure", () => {
     "app/dashboard/layout.tsx",
     "app/dashboard/page.tsx",
     "app/dashboard/Login/page.tsx",
-    "app/dashboard/PasswordReset/page.tsx",
-    "app/dashboard/ManageContents/page.tsx",
-    "app/dashboard/AccountSettingManagement/page.tsx",
-    "app/dashboard/AreaManagement/page.tsx",
-    "app/dashboard/UserAccountManagement/page.tsx",
-    "app/dashboard/ViewPosition/page.tsx",
+    "app/dashboard/password-reset/page.tsx",
+    "app/dashboard/manage-contents/page.tsx",
+    "app/dashboard/account-setting-management/page.tsx",
+    "app/dashboard/area-management/page.tsx",
+    "app/dashboard/user-account-management/page.tsx",
+    "app/dashboard/view-position/page.tsx",
   ]
 
   for (const page of appRouterPages) {

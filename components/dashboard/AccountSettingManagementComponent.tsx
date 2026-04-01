@@ -2,22 +2,18 @@ import {
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogContent,
   FormControlLabel,
   Grid,
   Paper,
   Typography,
 } from "@mui/material"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { supabase } from "../../src/supabase/client"
-import type { AccountData, Content } from "../../src/supabase/database.types"
-import {
-  getAccountDataClient,
-  getContentsDataClient,
-} from "../../utilities/getContentDataClient"
-import { updateAccountData } from "../../utilities/setContentData"
+import { updateAccountData } from "@/src/services/accounts"
+import { getAccountDataClient } from "@/src/services/auth"
+import { getContentsDataClient } from "@/src/services/contents"
+import { createClient } from "@/src/supabase/client"
+import type { AccountData, Content } from "@/src/supabase/database.types"
+import ErrorDialog from "./ErrorDialog"
 import { useOrderContext } from "./OrderContext"
 
 function AccountSettingManagementComponent(): React.JSX.Element {
@@ -42,12 +38,8 @@ function AccountSettingManagementComponent(): React.JSX.Element {
   const [showError, setShowError] = useState<boolean>(false)
 
   const { uid, setProgress, setCoverageArea } = useOrderContext()
-  const router = useRouter()
 
   useEffect(() => {
-    if (!sessionStorage.getItem("uid") && !uid) {
-      router.push("/dashboard/Login")
-    }
     async function getAccountInfoData(): Promise<void> {
       const u_id = sessionStorage.getItem("uid") || uid
       if (!u_id) {
@@ -67,7 +59,7 @@ function AccountSettingManagementComponent(): React.JSX.Element {
       setCoverageAreaList(list)
     }
     getAccountInfoData()
-  }, [router.push, uid])
+  }, [uid])
 
   const onClickUpdate = async (): Promise<void> => {
     if (!passwordFlg) {
@@ -111,7 +103,9 @@ function AccountSettingManagementComponent(): React.JSX.Element {
       setCoverageArea(list)
       setUpdateDisplay(false)
     } catch (e) {
-      console.log(e)
+      setError(e instanceof Error ? e.message : "エラーが発生しました")
+      setErrorPart("")
+      setShowError(true)
     } finally {
       setProgress(false)
     }
@@ -135,6 +129,7 @@ function AccountSettingManagementComponent(): React.JSX.Element {
 
   useEffect(() => {
     const handleBeforeUnload = (): void => {
+      const supabase = createClient()
       supabase.auth.signOut()
     }
     window.addEventListener("beforeunload", handleBeforeUnload)
@@ -211,8 +206,8 @@ function AccountSettingManagementComponent(): React.JSX.Element {
                             name={"userName"}
                             placeholder={user?.userName ?? ""}
                             disabled={userNameFlg}
-                            onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                              setUserName((e.target as HTMLInputElement).value)
+                            onInput={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              setUserName(e.target.value)
                             }
                           />
                         </Grid>
@@ -259,11 +254,9 @@ function AccountSettingManagementComponent(): React.JSX.Element {
                             name={"nowPassword"}
                             placeholder={"現在のパスワード"}
                             disabled={passwordFlg}
-                            onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                              setNowPassword(
-                                (e.target as HTMLInputElement).value,
-                              )
-                            }
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setNowPassword(e.target.value)}
                           />
                         </Grid>
                         <FormControlLabel
@@ -309,11 +302,9 @@ function AccountSettingManagementComponent(): React.JSX.Element {
                             name={"newPassword"}
                             placeholder={"新しいパスワード"}
                             disabled={passwordFlg}
-                            onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                              setNewPassword(
-                                (e.target as HTMLInputElement).value,
-                              )
-                            }
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setNewPassword(e.target.value)}
                           />
                         </Grid>
                       </Grid>
@@ -346,11 +337,9 @@ function AccountSettingManagementComponent(): React.JSX.Element {
                             name={"newRePassword"}
                             placeholder={"新しいパスワード（再入力）"}
                             disabled={passwordFlg}
-                            onInput={(e: React.FormEvent<HTMLInputElement>) =>
-                              setNewRePassword(
-                                (e.target as HTMLInputElement).value,
-                              )
-                            }
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => setNewRePassword(e.target.value)}
                           />
                         </Grid>
                       </Grid>
@@ -592,15 +581,12 @@ function AccountSettingManagementComponent(): React.JSX.Element {
           </Box>
         </>
       )}
-      <Dialog open={showError} onClose={handleCloseError}>
-        <DialogContent>
-          <Typography variant="h6" color="error">
-            {error}
-          </Typography>
-          <Typography variant="body1">対象箇所</Typography>
-          <Typography variant="body1">{errorPart}</Typography>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog
+        error={error}
+        errorPart={errorPart}
+        open={showError}
+        onClose={handleCloseError}
+      />
     </Box>
   )
 }
