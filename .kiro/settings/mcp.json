@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "next-devtools": {
-      "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"],
-      "autoApprove": ["nextjs_index", "nextjs_call", "browser_eval"]
-    }
-  }
-}
