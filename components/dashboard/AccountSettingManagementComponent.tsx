@@ -554,6 +554,7 @@ function AccountSettingManagementComponent(): React.JSX.Element {
                         }}
                       >
                         <Typography
+                          component="div"
                           style={{
                             lineHeight: "35px",
                             display: "flex",

@@ -3,6 +3,8 @@
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, created_at, updated_at, confirmation_token,
+  email_change, email_change_token_new, email_change_token_current,
+  phone_change, phone_change_token, recovery_token, reauthentication_token,
   raw_app_meta_data, raw_user_meta_data, is_super_admin
 ) values (
   '00000000-0000-0000-0000-000000000000',
@@ -11,6 +13,7 @@ insert into auth.users (
   'admin@example.com',
   crypt('password123', gen_salt('bf')),
   now(), now(), now(), '',
+  '', '', '', '', '', '', '',
   '{"provider":"email","providers":["email"]}', '{}', false
 ), (
   '00000000-0000-0000-0000-000000000000',
@@ -19,6 +22,7 @@ insert into auth.users (
   'user@example.com',
   crypt('password123', gen_salt('bf')),
   now(), now(), now(), '',
+  '', '', '', '', '', '', '',
   '{"provider":"email","providers":["email"]}', '{}', false
 );
 
