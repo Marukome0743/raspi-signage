@@ -13,17 +13,11 @@ describe("App Router migration: layout structure", () => {
     expect(content).toContain("</html>")
   })
 
-  test("root layout uses ThemeRegistry (which wraps CacheProvider, ThemeProvider, CssBaseline)", () => {
+  test("root layout uses AppRouterCacheProvider, ThemeProvider, and CssBaseline", () => {
     const content = readFileSync(resolve(root, "app/layout.tsx"), "utf-8")
-    expect(content).toContain("ThemeRegistry")
-    // ThemeRegistry contains the actual providers
-    const themeRegistry = readFileSync(
-      resolve(root, "components/ThemeRegistry.tsx"),
-      "utf-8",
-    )
-    expect(themeRegistry).toContain("CacheProvider")
-    expect(themeRegistry).toContain("ThemeProvider")
-    expect(themeRegistry).toContain("CssBaseline")
+    expect(content).toContain("AppRouterCacheProvider")
+    expect(content).toContain("ThemeProvider")
+    expect(content).toContain("CssBaseline")
   })
 
   test("root layout is a server component (no 'use client')", () => {

@@ -11,7 +11,6 @@ import Link from "@mui/material/Link"
 import Snackbar from "@mui/material/Snackbar"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
-import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
@@ -38,8 +37,6 @@ export default function LoginPage(): React.JSX.Element {
   const [showError, setShowError] = useState<boolean>(false)
 
   const { setProgress } = useOrderContext()
-
-  const router = useRouter()
 
   const handleClose = (
     _: React.SyntheticEvent | Event,
@@ -69,10 +66,10 @@ export default function LoginPage(): React.JSX.Element {
       const user = await getAccountLoginData(email, password)
       if (user != null) {
         if (user.passFlg) {
-          router.push("/dashboard/password-reset")
+          window.location.href = "/dashboard/password-reset"
           return
         }
-        router.push("/dashboard")
+        window.location.href = "/dashboard"
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました")

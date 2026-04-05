@@ -8,7 +8,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material"
-import { useState } from "react"
+import { useId, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
 import { postContent } from "@/src/services/upload"
@@ -24,7 +24,7 @@ export default function DashboardUploadClient(): React.JSX.Element {
   const [showError, setShowError] = useState<boolean>(false)
   const { orderId, setProgress } = useOrderContext()
   const maxImageUpload = 4
-  const inputId = Math.random().toString(32).substring(2)
+  const inputId = useId()
 
   const handleOnUpload = async (
     e: React.MouseEvent<HTMLButtonElement>,

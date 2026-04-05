@@ -202,7 +202,6 @@ function DashboardContent({ children, userInfo }: DashboardProps) {
   const toggleDrawer = () => {
     setOpen(!open)
   }
-  const router = useRouter()
   const pathname = usePathname()
   const areaDisplay = AREA_DISPLAY_PATHS.includes(pathname)
   const isPass = PASS_PATHS.includes(pathname)
@@ -249,7 +248,7 @@ function DashboardContent({ children, userInfo }: DashboardProps) {
     await supabase.auth
       .signOut()
       .then(() => {
-        router.push("/dashboard/login")
+        window.location.href = "/dashboard/login"
       })
       .catch(() => {
         alert("ログアウトに失敗しました")
