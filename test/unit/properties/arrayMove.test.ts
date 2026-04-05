@@ -184,36 +184,36 @@ describe("Property 3: SortableContext ID uniqueness", () => {
 })
 
 describe("Unit test: Static import verification", () => {
-  const filePath = resolve("components/dashboard/ManageContentsList.tsx")
+  const filePath = resolve("app/dashboard/manage-contents/page.tsx")
   const fileContent = readFileSync(filePath, "utf-8")
 
-  test("ManageContentsList.tsx does NOT contain imports from react-beautiful-dnd", () => {
+  test("manage-contents page does NOT contain imports from react-beautiful-dnd", () => {
     const hasReactBeautifulDnd = /from\s+["']react-beautiful-dnd["']/.test(
       fileContent,
     )
     expect(hasReactBeautifulDnd).toBe(false)
   })
 
-  test("ManageContentsList.tsx does NOT contain type imports from react-beautiful-dnd", () => {
+  test("manage-contents page does NOT contain type imports from react-beautiful-dnd", () => {
     const hasTypeImport = /from\s+["']@types\/react-beautiful-dnd["']/.test(
       fileContent,
     )
     expect(hasTypeImport).toBe(false)
   })
 
-  test("ManageContentsList.tsx contains imports from @dnd-kit/core", () => {
+  test("manage-contents page contains imports from @dnd-kit/core", () => {
     const hasDndKitCore = /from\s+["']@dnd-kit\/core["']/.test(fileContent)
     expect(hasDndKitCore).toBe(true)
   })
 
-  test("ManageContentsList.tsx contains imports from @dnd-kit/sortable", () => {
+  test("manage-contents page contains imports from @dnd-kit/sortable", () => {
     const hasDndKitSortable = /from\s+["']@dnd-kit\/sortable["']/.test(
       fileContent,
     )
     expect(hasDndKitSortable).toBe(true)
   })
 
-  test("ManageContentsList.tsx contains imports from @dnd-kit/utilities", () => {
+  test("manage-contents page contains imports from @dnd-kit/utilities", () => {
     const hasDndKitUtilities = /from\s+["']@dnd-kit\/utilities["']/.test(
       fileContent,
     )

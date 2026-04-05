@@ -1,7 +1,13 @@
 "use client"
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance"
+import AddBusinessIcon from "@mui/icons-material/AddBusiness"
+import ChangeCircleIcon from "@mui/icons-material/ChangeCircle"
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
+import DisplayIcon from "@mui/icons-material/DisplaySettings"
 import LogoutIcon from "@mui/icons-material/Logout"
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts"
 import MenuIcon from "@mui/icons-material/Menu"
+import UploadIcon from "@mui/icons-material/Upload"
 import type { SelectChangeEvent } from "@mui/material"
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material"
 import type { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar"
@@ -27,7 +33,6 @@ import * as React from "react"
 import { getContentList } from "@/src/services/contents"
 import { createClient } from "@/src/supabase/client"
 import type { ContentListItem } from "@/src/supabase/database.types"
-import { MainListItems } from "./ListItems"
 import { OrderProvider, useOrderContext } from "./OrderContext"
 
 interface DashboardProps {
@@ -36,6 +41,73 @@ interface DashboardProps {
 
 interface AppBarProps extends MuiAppBarProps {
   open?: boolean
+}
+
+interface MainListItemsProps {
+  isAdmin: boolean
+}
+
+interface CustomListItemProps {
+  onClick: () => void
+  text: string
+  children: React.ReactNode
+}
+
+const MainListItems = (props: MainListItemsProps) => {
+  const router = useRouter()
+  const CustomlistItem = ({ onClick, text, children }: CustomListItemProps) => {
+    return (
+      <ListItemButton onClick={onClick}>
+        <ListItemIcon>{children}</ListItemIcon>
+        <ListItemText primary={text} />
+      </ListItemButton>
+    )
+  }
+
+  return (
+    <React.Fragment>
+      <CustomlistItem
+        onClick={() => router.push("/dashboard")}
+        text="アップロード"
+      >
+        <UploadIcon />
+      </CustomlistItem>
+      <CustomlistItem
+        onClick={() => router.push("/dashboard/manage-contents")}
+        text="コンテンツ変更"
+      >
+        <ChangeCircleIcon />
+      </CustomlistItem>
+      <CustomlistItem
+        onClick={() => router.push("/dashboard/view-position")}
+        text="表示画面調整"
+      >
+        <DisplayIcon />
+      </CustomlistItem>
+      {props.isAdmin && (
+        <CustomlistItem
+          onClick={() => router.push("/dashboard/area-management")}
+          text="エリア管理"
+        >
+          <AddBusinessIcon />
+        </CustomlistItem>
+      )}
+      {props.isAdmin && (
+        <CustomlistItem
+          onClick={() => router.push("/dashboard/user-account-management")}
+          text="アカウント一覧管理"
+        >
+          <AccountBalanceIcon />
+        </CustomlistItem>
+      )}
+      <CustomlistItem
+        onClick={() => router.push("/dashboard/account-setting-management")}
+        text="アカウント詳細管理"
+      >
+        <ManageAccountsIcon />
+      </CustomlistItem>
+    </React.Fragment>
+  )
 }
 
 function Copyright(props: React.ComponentProps<typeof Typography>) {

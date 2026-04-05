@@ -5,55 +5,92 @@ import { resolve } from "node:path"
 const root = resolve(import.meta.dir, "../../..")
 
 describe("App Router migration: import paths resolve correctly", () => {
-  const pageImports: { page: string; expectedImport: string }[] = [
+  // After inlining, page files import shared components directly
+  const pageSharedImports: { page: string; expectedImports: string[] }[] = [
     {
       page: "app/dashboard/login/page.tsx",
-      expectedImport: "@/components/dashboard/LoginComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/password-reset/page.tsx",
-      expectedImport: "@/components/dashboard/PasswordResetComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/manage-contents/page.tsx",
-      expectedImport: "@/components/dashboard/ManageContentsList",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/account-setting-management/page.tsx",
-      expectedImport:
-        "@/components/dashboard/AccountSettingManagementComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/area-management/page.tsx",
-      expectedImport: "@/components/dashboard/AreaManagementComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/user-account-management/page.tsx",
-      expectedImport: "@/components/dashboard/UserAccountManagementComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/view-position/page.tsx",
-      expectedImport: "@/components/dashboard/ViewPositionComponent",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
     {
       page: "app/dashboard/layout.tsx",
-      expectedImport: "@/components/dashboard/Dashboard",
+      expectedImports: ["@/components/dashboard/Dashboard"],
     },
     {
       page: "app/dashboard/page.tsx",
-      expectedImport: "@/components/dashboard/UploadContents",
+      expectedImports: [
+        "@/components/dashboard/ErrorDialog",
+        "@/components/dashboard/OrderContext",
+      ],
     },
   ]
 
-  for (const { page, expectedImport } of pageImports) {
-    test(`${page} imports from correct path`, () => {
+  for (const { page, expectedImports } of pageSharedImports) {
+    test(`${page} imports shared components from correct path`, () => {
       const content = readFileSync(resolve(root, page), "utf-8")
-      expect(content).toContain(expectedImport)
+      for (const expectedImport of expectedImports) {
+        expect(content).toContain(expectedImport)
+      }
     })
   }
 
-  test("all component files exist", () => {
+  test("shared component files exist", () => {
     const components = [
+      "components/dashboard/Dashboard.tsx",
+      "components/dashboard/ErrorDialog.tsx",
+      "components/dashboard/OrderContext.tsx",
+    ]
+    for (const component of components) {
+      expect(existsSync(resolve(root, component))).toBe(true)
+    }
+  })
+
+  test("inlined component files no longer exist", () => {
+    const deletedComponents = [
       "components/dashboard/LoginComponent.tsx",
       "components/dashboard/PasswordResetComponent.tsx",
       "components/dashboard/ManageContentsList.tsx",
@@ -61,11 +98,14 @@ describe("App Router migration: import paths resolve correctly", () => {
       "components/dashboard/AreaManagementComponent.tsx",
       "components/dashboard/UserAccountManagementComponent.tsx",
       "components/dashboard/ViewPositionComponent.tsx",
-      "components/dashboard/Dashboard.tsx",
       "components/dashboard/UploadContents.tsx",
+      "components/dashboard/ListItems.tsx",
+      "components/dashboard/styles.ts",
+      "components/dashboard/CustomizedSnackbars.tsx",
+      "components/dashboard/Title.tsx",
     ]
-    for (const component of components) {
-      expect(existsSync(resolve(root, component))).toBe(true)
+    for (const component of deletedComponents) {
+      expect(existsSync(resolve(root, component))).toBe(false)
     }
   })
 })

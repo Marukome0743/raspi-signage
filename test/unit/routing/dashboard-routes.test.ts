@@ -41,9 +41,9 @@ describe("App Router migration: dashboard route parity", () => {
     }
   })
 
-  test("navigation links in ListItems match App Router paths", () => {
+  test("navigation links in Dashboard match App Router paths", () => {
     const content = readFileSync(
-      resolve(root, "components/dashboard/ListItems.tsx"),
+      resolve(root, "components/dashboard/Dashboard.tsx"),
       "utf-8",
     )
     const expectedPaths = [
@@ -59,10 +59,10 @@ describe("App Router migration: dashboard route parity", () => {
     }
   })
 
-  test("login redirects in components use App Router paths", () => {
+  test("login redirects in pages use App Router paths", () => {
     const files: string[] = [
-      "components/dashboard/LoginComponent.tsx",
-      "components/dashboard/PasswordResetComponent.tsx",
+      "app/dashboard/login/page.tsx",
+      "app/dashboard/password-reset/page.tsx",
     ]
     for (const file of files) {
       const content = readFileSync(resolve(root, file), "utf-8")

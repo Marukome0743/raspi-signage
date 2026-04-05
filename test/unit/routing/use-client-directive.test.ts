@@ -9,6 +9,13 @@ describe("App Router migration: 'use client' directives", () => {
   const clientPages: string[] = [
     "app/dashboard/layout.tsx",
     "app/dashboard/page.tsx",
+    "app/dashboard/login/page.tsx",
+    "app/dashboard/password-reset/page.tsx",
+    "app/dashboard/manage-contents/page.tsx",
+    "app/dashboard/account-setting-management/page.tsx",
+    "app/dashboard/area-management/page.tsx",
+    "app/dashboard/user-account-management/page.tsx",
+    "app/dashboard/view-position/page.tsx",
   ]
 
   for (const page of clientPages) {
@@ -19,17 +26,7 @@ describe("App Router migration: 'use client' directives", () => {
   }
 
   // Server component pages (no "use client" needed)
-  const serverPages: string[] = [
-    "app/layout.tsx",
-    "app/page.tsx",
-    "app/dashboard/login/page.tsx",
-    "app/dashboard/password-reset/page.tsx",
-    "app/dashboard/manage-contents/page.tsx",
-    "app/dashboard/account-setting-management/page.tsx",
-    "app/dashboard/area-management/page.tsx",
-    "app/dashboard/user-account-management/page.tsx",
-    "app/dashboard/view-position/page.tsx",
-  ]
+  const serverPages: string[] = ["app/layout.tsx", "app/page.tsx"]
 
   for (const page of serverPages) {
     test(`${page} does not have "use client" directive (server component)`, () => {
