@@ -25,8 +25,8 @@ function UploadContents(): React.JSX.Element {
   const [images, setImages] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [type, setType] = useState<UploadType>("image")
-  const [error, setError] = useState<ErrorMessage>("")
-  const [errorPart, setErrorPart] = useState<ErrorPart>("")
+  const [error, setError] = useState<string>("")
+  const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
   const { orderId, setProgress } = useOrderContext()
   const maxImageUpload = 4

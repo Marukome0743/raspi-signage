@@ -26,7 +26,7 @@ This starts all Supabase services via Docker. After startup, the CLI outputs the
 Generate a `.env` file from the running Supabase instance:
 
 ```bash
-mise run supabase:env
+mise supabase:env
 ```
 
 This writes `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to `.env` automatically.
@@ -56,6 +56,20 @@ bun dev
 ```
 
 Open <http://localhost:3000/dashboard/login> to access the dashboard.
+
+## Pages
+
+| URL | Description |
+| --- | --- |
+| `/` | サイネージ表示（`?areaId=` で指定） |
+| `/dashboard/login` | ログイン |
+| `/dashboard` | ダッシュボード（トップ） |
+| `/dashboard/manage-contents` | コンテンツ管理 |
+| `/dashboard/view-position` | 表示位置調整 |
+| `/dashboard/area-management` | エリア管理 |
+| `/dashboard/user-account-management` | ユーザーアカウント管理 |
+| `/dashboard/account-setting-management` | アカウント設定 |
+| `/dashboard/password-reset` | パスワードリセット |
 
 ## Stopping Supabase
 

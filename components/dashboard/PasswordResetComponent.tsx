@@ -24,8 +24,8 @@ function PasswordResetComponent(): React.JSX.Element {
   const [newPassword, setNewPassword] = useState<string>("")
   const [newRePassword, setNewRePassword] = useState<string>("")
 
-  const [error] = useState<string>("")
-  const [errorPart] = useState<string>("")
+  const [error, setError] = useState<string>("")
+  const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
 
   const { uid, setUid, setUserName, setProgress } = useOrderContext()

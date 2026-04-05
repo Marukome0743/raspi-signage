@@ -198,8 +198,8 @@ function ManageContentsView(): React.JSX.Element {
   const [display, setDisplay] = useState<DisplayContentItem[]>([])
   const [hidden, setHidden] = useState<DisplayContentItem[]>([])
   const [contents_list] = useState<Partial<Order>>({})
-  const [error] = useState<string>("")
-  const [errorPart] = useState<string>("")
+  const [error, setError] = useState<string>("")
+  const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
 
   const { orderId, setProgress } = useOrderContext()

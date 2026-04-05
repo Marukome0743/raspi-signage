@@ -47,7 +47,15 @@ function Copyright(props: React.ComponentProps<typeof Typography>) {
       {...props}
     >
       {"Copyright © "}
-      <Link color="inherit">ラボ</Link> {new Date().getFullYear()}
+      <Link
+        color="inherit"
+        href="https://github.com/OpenUp-LabTakizawa"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        OpenUp-LabTakizawa
+      </Link>{" "}
+      {new Date().getFullYear()}
       {"."}
     </Typography>
   )
@@ -224,8 +232,44 @@ function DashboardContent({ children }: DashboardProps) {
                 noWrap
                 sx={{ flexGrow: 1 }}
               >
-                サイネージダッシュボード{name && <> ユーザー名：{name}</>}
+                サイネージダッシュボード
               </Typography>
+              {name && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mx: 2,
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 2,
+                    bgcolor: "rgba(255,255,255,0.12)",
+                    backdropFilter: "blur(4px)",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: "0.75rem",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    USER
+                  </Typography>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {name}
+                  </Typography>
+                </Box>
+              )}
               {areaDisplay && (
                 <FormControl variant="standard" sx={{ minWidth: 120 }}>
                   <InputLabel id="area-label" sx={{ color: "white" }}>

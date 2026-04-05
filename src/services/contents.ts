@@ -202,7 +202,7 @@ export function mapContentToListItem(content: Content): ContentListItem {
 }
 
 // Filter out deleted items and empty objects
-export function filterActiveDisplayItems<T extends { delete?: boolean }>(
+export function filterActiveDisplayItems<T extends Record<string, unknown>>(
   items: T[],
 ): T[] {
   return items.filter((item) => !item.delete && Object.keys(item).length > 0)
