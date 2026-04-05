@@ -37,7 +37,7 @@ describe("App Router migration: dashboard route parity", () => {
   test("all dashboard routes export a default function component", () => {
     for (const { page } of routes) {
       const content = readFileSync(resolve(root, page), "utf-8")
-      expect(content).toMatch(/export\s+default\s+function\s+\w+/)
+      expect(content).toMatch(/export\s+default\s+(async\s+)?function\s+\w+/)
     }
   })
 

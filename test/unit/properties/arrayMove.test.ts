@@ -184,7 +184,7 @@ describe("Property 3: SortableContext ID uniqueness", () => {
 })
 
 describe("Unit test: Static import verification", () => {
-  const filePath = resolve("app/dashboard/manage-contents/page.tsx")
+  const filePath = resolve("components/dashboard/ManageContentsClient.tsx")
   const fileContent = readFileSync(filePath, "utf-8")
 
   test("manage-contents page does NOT contain imports from react-beautiful-dnd", () => {

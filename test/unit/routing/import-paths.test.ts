@@ -23,38 +23,25 @@ describe("App Router migration: import paths resolve correctly", () => {
     },
     {
       page: "app/dashboard/manage-contents/page.tsx",
-      expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
-      ],
+      expectedImports: ["@/components/dashboard/ManageContentsClient"],
     },
     {
       page: "app/dashboard/account-setting-management/page.tsx",
       expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
+        "@/components/dashboard/AccountSettingManagementClient",
       ],
     },
     {
       page: "app/dashboard/area-management/page.tsx",
-      expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
-      ],
+      expectedImports: ["@/components/dashboard/AreaManagementClient"],
     },
     {
       page: "app/dashboard/user-account-management/page.tsx",
-      expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
-      ],
+      expectedImports: ["@/components/dashboard/UserAccountManagementClient"],
     },
     {
       page: "app/dashboard/view-position/page.tsx",
-      expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
-      ],
+      expectedImports: ["@/components/dashboard/ViewPositionClient"],
     },
     {
       page: "app/dashboard/layout.tsx",
@@ -62,10 +49,7 @@ describe("App Router migration: import paths resolve correctly", () => {
     },
     {
       page: "app/dashboard/page.tsx",
-      expectedImports: [
-        "@/components/dashboard/ErrorDialog",
-        "@/components/dashboard/OrderContext",
-      ],
+      expectedImports: ["@/components/dashboard/DashboardUploadClient"],
     },
   ]
 

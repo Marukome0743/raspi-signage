@@ -120,19 +120,18 @@ export interface ContentListItem {
   delete: boolean
 }
 
+// UserInfo type definition (server-side user data passed via props)
+export interface UserInfo {
+  uid: string
+  userName: string
+  isAdmin: boolean
+  coverageArea: string[]
+}
+
 // OrderContext type definitions
 export interface OrderContextValue {
   orderId: string | null
   setOrderId: (id: string | null) => void
-  isAdmin: boolean
-  setIsAdmin: (admin: boolean) => void
-  currentUser: import("@supabase/supabase-js").User | null | undefined
-  uid: string | undefined
-  setUid: (uid: string | undefined) => void
-  userName: string | undefined
-  setUserName: (name: string | undefined) => void
-  coverageArea: string[]
-  setCoverageArea: (area: string[]) => void
   progress: boolean
   setProgress: (progress: boolean) => void
 }

@@ -28,15 +28,29 @@ export default function PasswordResetPage(): React.JSX.Element {
   const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
 
-  const { uid, setUid, setUserName, setProgress } = useOrderContext()
+  const [uid, setUid] = useState<string | null>(null)
+  const { setProgress } = useOrderContext()
 
   const router = useRouter()
 
   useEffect(() => {
-    async function getInfoData() {
-      console.log(uid)
-      if (!uid) {
+    async function fetchUid() {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
         router.push("/dashboard/login")
+        return
+      }
+      setUid(user.id)
+    }
+    fetchUid()
+  }, [router])
+
+  useEffect(() => {
+    async function getInfoData() {
+      if (!uid) {
         return
       }
       const user = await getAccountDataClient(uid)
@@ -67,8 +81,6 @@ export default function PasswordResetPage(): React.JSX.Element {
         await resetPassword(uid as string, user.email, nowPassword, newPassword)
         const supabase = createClient()
         await supabase.auth.signOut()
-        setUid("")
-        setUserName("")
         setProgress(false)
         router.push("/dashboard/login")
       }

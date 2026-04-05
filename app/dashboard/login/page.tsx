@@ -37,8 +37,7 @@ export default function LoginPage(): React.JSX.Element {
   const [errorPart, setErrorPart] = useState<string>("")
   const [showError, setShowError] = useState<boolean>(false)
 
-  const { setIsAdmin, setUid, setUserName, setCoverageArea, setProgress } =
-    useOrderContext()
+  const { setProgress } = useOrderContext()
 
   const router = useRouter()
 
@@ -69,18 +68,10 @@ export default function LoginPage(): React.JSX.Element {
     try {
       const user = await getAccountLoginData(email, password)
       if (user != null) {
-        setUid(user.uid)
-        console.log(user)
         if (user.passFlg) {
           router.push("/dashboard/password-reset")
           return
         }
-        setUserName(user.userName)
-        setCoverageArea(user.coverageArea)
-        if (user.management) {
-          setIsAdmin(true)
-        }
-
         router.push("/dashboard")
       }
     } catch (e) {

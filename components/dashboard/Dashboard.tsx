@@ -32,11 +32,12 @@ import { usePathname, useRouter } from "next/navigation"
 import * as React from "react"
 import { getContentList } from "@/src/services/contents"
 import { createClient } from "@/src/supabase/client"
-import type { ContentListItem } from "@/src/supabase/database.types"
+import type { ContentListItem, UserInfo } from "@/src/supabase/database.types"
 import { OrderProvider, useOrderContext } from "./OrderContext"
 
 interface DashboardProps {
   children: React.ReactNode
+  userInfo: UserInfo | null
 }
 
 interface AppBarProps extends MuiAppBarProps {
@@ -188,18 +189,11 @@ const AREA_DISPLAY_PATHS = [
 ]
 const PASS_PATHS = ["/dashboard/password-reset"]
 
-function DashboardContent({ children }: DashboardProps) {
+function DashboardContent({ children, userInfo }: DashboardProps) {
   const [open, setOpen] = React.useState<boolean>(false)
-  const {
-    isAdmin,
-    setOrderId,
-    uid,
-    setUid,
-    userName,
-    setUserName,
-    coverageArea,
-    progress,
-  } = useOrderContext()
+  const { setOrderId, progress } = useOrderContext()
+  const isAdmin = userInfo?.isAdmin ?? false
+  const coverageArea = userInfo?.coverageArea ?? []
   const [contentsObjArr, setContentsObjArr] = React.useState<ContentListItem[]>(
     [],
   )
@@ -244,10 +238,10 @@ function DashboardContent({ children }: DashboardProps) {
   }, [coverageArea, setOrderId])
 
   React.useEffect(() => {
-    if (uid) {
-      setName(userName ?? "")
+    if (userInfo?.uid) {
+      setName(userInfo.userName ?? "")
     }
-  }, [uid, userName])
+  }, [userInfo])
 
   const onClickLogout = async () => {
     setName("")
@@ -255,8 +249,6 @@ function DashboardContent({ children }: DashboardProps) {
     await supabase.auth
       .signOut()
       .then(() => {
-        setUid("")
-        setUserName("")
         router.push("/dashboard/login")
       })
       .catch(() => {
@@ -381,7 +373,7 @@ function DashboardContent({ children }: DashboardProps) {
               </IconButton>
             </Toolbar>
             <Divider />
-            {!isPass && uid && (
+            {!isPass && userInfo?.uid && (
               <>
                 <List component="nav" style={{ height: "100%" }}>
                   <MainListItems isAdmin={isAdmin} />
@@ -424,10 +416,10 @@ function DashboardContent({ children }: DashboardProps) {
   )
 }
 
-export default function Dashboard({ children }: DashboardProps) {
+export default function Dashboard({ children, userInfo }: DashboardProps) {
   return (
     <OrderProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <DashboardContent userInfo={userInfo}>{children}</DashboardContent>
     </OrderProvider>
   )
 }
