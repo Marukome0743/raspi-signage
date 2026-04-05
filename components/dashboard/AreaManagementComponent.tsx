@@ -1,3 +1,5 @@
+"use client"
+
 import CancelIcon from "@mui/icons-material/Cancel"
 import { Box, Button, Grid, IconButton, Paper, Typography } from "@mui/material"
 import { useEffect, useState } from "react"

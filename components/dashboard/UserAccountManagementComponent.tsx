@@ -1,3 +1,5 @@
+"use client"
+
 import CancelIcon from "@mui/icons-material/Cancel"
 import {
   Box,
