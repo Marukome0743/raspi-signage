@@ -4,11 +4,13 @@ import Typography from "@mui/material/Typography"
 export default function NotFound() {
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-      minHeight="100vh"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "100vh",
+      }}
     >
       <Typography variant="h4" gutterBottom>
         404
