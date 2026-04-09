@@ -4,9 +4,13 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   FormControlLabel,
   Grid,
   Paper,
+  Radio,
+  RadioGroup,
+  TextField,
   Typography,
 } from "@mui/material"
 import { useEffect, useState } from "react"
@@ -149,436 +153,222 @@ export default function AccountSettingManagementClient({
 
   return (
     <Box>
-      <Typography>アカウント詳細管理</Typography>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        アカウント詳細管理
+      </Typography>
       {!displayFlg ? (
-        <Typography>データ取得中</Typography>
+        <Typography sx={{ color: "text.secondary" }}>データ取得中</Typography>
       ) : (
         <>
-          <Typography style={{ width: "50%", lineHeight: "35px" }}>
-            ユーザー名： {user?.userName}
+          <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+            {user?.userName}
           </Typography>
-          <Box style={{ display: "flex", flexDirection: "column" }}>
-            <Paper
-              sx={{ height: 1 / 5, m: 1 }}
-              key={"key"}
-              style={{ position: "relative" }}
-            >
-              <Grid container>
-                {updateDisplay ? (
-                  <Button
-                    variant="contained"
-                    sx={{ m: 1 }}
-                    onClick={() => setUpdateDisplay(false)}
-                  >
-                    閉じる
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    sx={{ m: 1 }}
-                    onClick={() => setUpdateDisplay(true)}
-                  >
-                    編集
-                  </Button>
-                )}
-              </Grid>
-              <Grid>
-                {updateDisplay ? (
-                  <>
-                    <Grid container>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            ユーザー名：{" "}
-                          </Typography>
-                          <input
-                            type="text"
-                            style={{ width: "50%" }}
-                            name={"userName"}
-                            placeholder={user?.userName ?? ""}
-                            disabled={userNameFlg}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => setUserName(e.target.value)}
-                          />
-                        </Grid>
-                        <FormControlLabel
-                          label={"変更しない"}
-                          labelPlacement="start"
-                          control={
-                            <Checkbox
-                              name={"userNameFlg"}
-                              checked={userNameFlg}
-                              onChange={() => setUserNameFlg(!userNameFlg)}
-                              style={{ width: "20px" }}
-                            />
-                          }
-                          style={{ marginRight: "0px" }}
+          <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ mb: 2 }}>
+              <Button
+                variant={updateDisplay ? "outlined" : "contained"}
+                onClick={() => setUpdateDisplay(!updateDisplay)}
+              >
+                {updateDisplay ? "閉じる" : "編集"}
+              </Button>
+            </Box>
+
+            {updateDisplay ? (
+              /* Edit mode */
+              <Grid container spacing={2}>
+                {/* Username */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="ユーザー名"
+                      placeholder={user?.userName ?? ""}
+                      disabled={userNameFlg}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setUserName(e.target.value)
+                      }
+                    />
+                    <FormControlLabel
+                      label="変更しない"
+                      control={
+                        <Checkbox
+                          checked={userNameFlg}
+                          onChange={() => setUserNameFlg(!userNameFlg)}
+                          size="small"
                         />
-                      </Grid>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            パスワード（現在のパスワード）：{" "}
-                          </Typography>
-                          <input
-                            type="password"
-                            style={{ width: "50%" }}
-                            name={"nowPassword"}
-                            placeholder={"現在のパスワード"}
-                            disabled={passwordFlg}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => setNowPassword(e.target.value)}
-                          />
-                        </Grid>
-                        <FormControlLabel
-                          label={"変更しない"}
-                          labelPlacement="start"
-                          control={
-                            <Checkbox
-                              name={"passwordFlg"}
-                              checked={passwordFlg}
-                              onChange={() => setPasswordFlg(!passwordFlg)}
-                              style={{ width: "20px" }}
-                            />
-                          }
-                          style={{ marginRight: "0px" }}
+                      }
+                      sx={{ whiteSpace: "nowrap" }}
+                    />
+                  </Box>
+                </Grid>
+
+                {/* Current password */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="現在のパスワード"
+                      type="password"
+                      placeholder="現在のパスワード"
+                      disabled={passwordFlg}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setNowPassword(e.target.value)
+                      }
+                    />
+                    <FormControlLabel
+                      label="変更しない"
+                      control={
+                        <Checkbox
+                          checked={passwordFlg}
+                          onChange={() => setPasswordFlg(!passwordFlg)}
+                          size="small"
                         />
-                      </Grid>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            新しいパスワード：{" "}
-                          </Typography>
-                          <input
-                            type="password"
-                            style={{ width: "50%" }}
-                            name={"newPassword"}
-                            placeholder={"新しいパスワード"}
-                            disabled={passwordFlg}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => setNewPassword(e.target.value)}
+                      }
+                      sx={{ whiteSpace: "nowrap" }}
+                    />
+                  </Box>
+                </Grid>
+
+                {/* New password */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="新しいパスワード"
+                    type="password"
+                    placeholder="新しいパスワード"
+                    disabled={passwordFlg}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setNewPassword(e.target.value)
+                    }
+                  />
+                </Grid>
+
+                {/* Confirm new password */}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="新しいパスワード（再入力）"
+                    type="password"
+                    placeholder="新しいパスワード（再入力）"
+                    disabled={passwordFlg}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setNewRePassword(e.target.value)
+                    }
+                  />
+                </Grid>
+
+                {/* Role */}
+                <Grid size={12}>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 0.5, color: "text.secondary" }}
+                  >
+                    権限
+                  </Typography>
+                  <RadioGroup
+                    row
+                    value={management}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setManagement(e.target.value)
+                    }
+                  >
+                    <FormControlLabel
+                      value="management"
+                      control={<Radio size="small" disabled />}
+                      label="管理者"
+                    />
+                    <FormControlLabel
+                      value="user"
+                      control={<Radio size="small" disabled />}
+                      label="利用者"
+                    />
+                  </RadioGroup>
+                </Grid>
+
+                {/* Area */}
+                <Grid size={12}>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 0.5, color: "text.secondary" }}
+                  >
+                    エリア設定
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {contentList.map((content, i) => (
+                      <FormControlLabel
+                        key={`areaName_${content.area_id}`}
+                        label={content.area_name}
+                        control={
+                          <Checkbox
+                            checked={coverageAreaList[i] ?? false}
+                            onChange={() => onChangeCheckBox(i)}
+                            size="small"
                           />
-                        </Grid>
-                      </Grid>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            新しいパスワード（再）：{" "}
-                          </Typography>
-                          <input
-                            type="password"
-                            style={{ width: "50%" }}
-                            name={"newRePassword"}
-                            placeholder={"新しいパスワード（再入力）"}
-                            disabled={passwordFlg}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => setNewRePassword(e.target.value)}
-                          />
-                        </Grid>
-                      </Grid>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            権限：{" "}
-                          </Typography>
-                          <FormControlLabel
-                            label={"管理者"}
-                            labelPlacement="start"
-                            control={
-                              <input
-                                type="radio"
-                                style={{ width: "20%" }}
-                                name={"management"}
-                                value={"management"}
-                                disabled={true}
-                                checked={management === "management"}
-                                onChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>,
-                                ) => setManagement(e.target.value)}
-                              />
-                            }
-                            style={{ marginRight: "0px", width: "75px" }}
-                          />
-                          <FormControlLabel
-                            label={"利用者"}
-                            labelPlacement="start"
-                            control={
-                              <input
-                                type="radio"
-                                style={{ width: "20%" }}
-                                name={".management"}
-                                value={"user"}
-                                checked={management === "user"}
-                                disabled={true}
-                                onChange={(
-                                  e: React.ChangeEvent<HTMLInputElement>,
-                                ) => setManagement(e.target.value)}
-                              />
-                            }
-                            style={{ marginRight: "0px", width: "75px" }}
-                          />
-                        </Grid>
-                      </Grid>
-                      <Grid
-                        size={8}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            エリア設定：{" "}
-                          </Typography>
-                          <Grid style={{ display: "flex", flexWrap: "wrap" }}>
-                            {contentList.map((content, i) => {
-                              return (
-                                <FormControlLabel
-                                  label={content.area_name}
-                                  labelPlacement="start"
-                                  key={`areaName_${content.area_id}`}
-                                  control={
-                                    <Checkbox
-                                      name={"coverageArea"}
-                                      checked={coverageAreaList[i] ?? false}
-                                      onChange={() => onChangeCheckBox(i)}
-                                      style={{ width: "20px" }}
-                                    />
-                                  }
-                                  style={{ marginRight: "0px" }}
-                                />
-                              )
-                            })}
-                          </Grid>
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                    <Button
-                      variant="contained"
-                      sx={{ m: 1 }}
-                      onClick={() => onClickUpdate()}
-                    >
-                      編集
-                    </Button>
-                  </>
-                ) : (
-                  <Grid container>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          ユーザー名： {user?.userName}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          パスワード： ***********
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          権限： {user?.management ? "管理者" : "利用者"}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                        }}
-                      >
-                        <Typography
-                          component="div"
-                          style={{
-                            lineHeight: "35px",
-                            display: "flex",
-                            flexDirection: "row",
-                          }}
-                        >
-                          エリア設定：{" "}
-                          {areaList.length > 0 ? (
-                            areaList.map((area) => (
-                              <Grid
-                                key={`areList_${area}`}
-                                style={{ padding: "0 10px" }}
-                              >
-                                {area}
-                              </Grid>
-                            ))
-                          ) : (
-                            <Grid style={{ padding: "0 10px" }}>設定なし</Grid>
-                          )}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Grid>
-                )}
+                        }
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+
+                <Grid size={12}>
+                  <Button variant="contained" onClick={() => onClickUpdate()}>
+                    更新
+                  </Button>
+                </Grid>
               </Grid>
-            </Paper>
-          </Box>
+            ) : (
+              /* Read-only mode */
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    ユーザー名
+                  </Typography>
+                  <Typography variant="body1">{user?.userName}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    パスワード
+                  </Typography>
+                  <Typography variant="body1">***********</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    権限
+                  </Typography>
+                  <Typography variant="body1">
+                    {user?.management ? "管理者" : "利用者"}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "text.secondary", mb: 0.5 }}
+                  >
+                    エリア設定
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                    {areaList.length > 0 ? (
+                      areaList.map((area) => (
+                        <Chip
+                          key={`areList_${area}`}
+                          label={area}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        設定なし
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </Paper>
         </>
       )}
       <ErrorDialog

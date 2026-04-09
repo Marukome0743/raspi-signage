@@ -13,11 +13,17 @@ describe("App Router migration: layout structure", () => {
     expect(content).toContain("</html>")
   })
 
-  test("root layout uses AppRouterCacheProvider, ThemeProvider, and CssBaseline", () => {
+  test("root layout uses AppRouterCacheProvider, ColorModeProvider, and CssBaseline", () => {
     const content = readFileSync(resolve(root, "app/layout.tsx"), "utf-8")
     expect(content).toContain("AppRouterCacheProvider")
-    expect(content).toContain("ThemeProvider")
+    expect(content).toContain("ColorModeProvider")
     expect(content).toContain("CssBaseline")
+
+    const colorModeContent = readFileSync(
+      resolve(root, "src/ColorModeContext.tsx"),
+      "utf-8",
+    )
+    expect(colorModeContent).toContain("ThemeProvider")
   })
 
   test("root layout is a server component (no 'use client')", () => {

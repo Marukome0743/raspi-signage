@@ -5,9 +5,9 @@ import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Container from "@mui/material/Container"
-import CssBaseline from "@mui/material/CssBaseline"
 import Grid from "@mui/material/Grid"
 import Link from "@mui/material/Link"
+import Paper from "@mui/material/Paper"
 import Snackbar from "@mui/material/Snackbar"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
@@ -88,81 +88,96 @@ export default function LoginPage(): React.JSX.Element {
   }
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
       <Box
         sx={{
-          marginTop: 8,
+          minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          ログイン
-        </Typography>
-        <Box component="form" onSubmit={onSubmit} sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="e-mail"
-            name="email"
-            autoComplete="email"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
-            autoFocus
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Avatar sx={{ m: 1, width: 48, height: 48 }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
             ログイン
-          </Button>
-          <Grid container>
-            <Grid size="grow">
-              <Link
-                href="#"
-                variant="body2"
-                onClick={() => {
-                  setStatus({
-                    open: true,
-                    type: "error",
-                    message: `管理者に問い合わせてください`,
-                  })
-                }}
-              >
-                パスワードを忘れた?
-              </Link>
+          </Typography>
+          <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="メールアドレス"
+              name="email"
+              autoComplete="email"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              autoFocus
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="パスワード"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, py: 1.2 }}
+            >
+              ログイン
+            </Button>
+            <Grid container>
+              <Grid size="grow">
+                <Link
+                  href="#"
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    "&:hover": { color: "primary.main" },
+                    transition: "color 0.2s",
+                  }}
+                  onClick={() => {
+                    setStatus({
+                      open: true,
+                      type: "error",
+                      message: `管理者に問い合わせてください`,
+                    })
+                  }}
+                >
+                  パスワードを忘れた?
+                </Link>
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
+          </Box>
+        </Paper>
       </Box>
       <Snackbar
         open={status.open}
         onClose={handleClose}
         autoHideDuration={3000}
         message={status.message}
-        style={{ position: "relative" }}
       />
       <ErrorDialog
         error={error}

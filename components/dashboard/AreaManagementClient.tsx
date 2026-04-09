@@ -1,7 +1,14 @@
 "use client"
 
 import CancelIcon from "@mui/icons-material/Cancel"
-import { Box, Button, Grid, IconButton, Paper, Typography } from "@mui/material"
+import {
+  Box,
+  Button,
+  IconButton,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material"
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
@@ -152,180 +159,167 @@ export default function AreaManagementClient({
 
   return (
     <>
-      <Box>
-        <Typography>エリア管理</Typography>
-        {!displayFlg ? (
-          <Typography>データ取得中</Typography>
-        ) : (
-          <>
-            <Grid>
-              {createDisplay ? (
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        エリア管理
+      </Typography>
+      {!displayFlg ? (
+        <Typography sx={{ color: "text.secondary" }}>データ取得中</Typography>
+      ) : (
+        <>
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant={createDisplay ? "outlined" : "contained"}
+              onClick={() => setCreateDisplay(!createDisplay)}
+            >
+              {createDisplay ? "閉じる" : "エリア追加"}
+            </Button>
+          </Box>
+
+          {createDisplay && (
+            <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                新規エリア追加
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "stretch", sm: "flex-end" },
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  label="エリア名"
+                  placeholder="例：関東"
+                  value={areaName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setAreaName(e.target.value)
+                  }
+                  sx={{ flex: 1, maxWidth: { sm: 300 } }}
+                />
                 <Button
+                  disabled={areaName === ""}
                   variant="contained"
-                  sx={{ m: 1 }}
-                  onClick={() => setCreateDisplay(false)}
-                >
-                  閉じる
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  sx={{ m: 1 }}
-                  onClick={() => setCreateDisplay(true)}
+                  onClick={onClickCreate}
                 >
                   エリア追加
                 </Button>
-              )}
-              {createDisplay && (
-                <Paper
-                  sx={{ height: 1 / 5, m: 1 }}
-                  key={"key"}
-                  style={{ position: "relative" }}
+              </Box>
+            </Paper>
+          )}
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {contents_list.map((content, index) => (
+              <Paper
+                elevation={0}
+                key={`key${content.areaId}`}
+                sx={{
+                  p: { xs: 2, sm: 3 },
+                  position: "relative",
+                  "&:hover": {
+                    borderColor: "primary.main",
+                    transition: "border-color 0.2s",
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    gap: 2,
+                    pr: 5,
+                  }}
                 >
-                  <Grid container>
-                    <Grid
-                      size={8}
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                        flexWrap: "wrap",
-                      }}
+                  <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
                     >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          width: "50%",
-                        }}
+                      ID:{" "}
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{ color: "text.primary", fontWeight: 500 }}
                       >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          エリア名：{" "}
-                        </Typography>
-                        <input
-                          type="text"
-                          style={{ width: "40%" }}
-                          name={"areaName"}
-                          placeholder={"例：関東"}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setAreaName(e.target.value)
-                          }
-                        />
-                      </Grid>
-                      <Button
-                        disabled={areaName === ""}
-                        variant="contained"
-                        sx={{ m: 1 }}
-                        onClick={onClickCreate}
+                        {content.areaId}
+                      </Typography>
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      エリア名:{" "}
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{ color: "text.primary", fontWeight: 500 }}
                       >
-                        エリア追加
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              )}
-            </Grid>
-            <Box style={{ display: "flex", flexDirection: "column" }}>
-              {contents_list.map((content, index) => {
-                return (
-                  <Paper
-                    sx={{ height: 1 / 5, m: 1 }}
-                    key={`key${content.areaId}`}
-                    style={{ position: "relative" }}
+                        {content.areaName}
+                      </Typography>
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => updateArea(index)}
                   >
-                    <Grid container>
-                      <Grid
-                        size={5}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                          }}
-                        >
-                          <Typography
-                            style={{ lineHeight: "35px", marginRight: "20px" }}
-                          >
-                            エリアID： {content.areaId}
-                          </Typography>
-                          <Typography style={{ lineHeight: "35px" }}>
-                            エリア名： {content.areaName}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                      {updateAreaDisplay[index] ? (
-                        <Button
-                          variant="contained"
-                          sx={{ m: 1 }}
-                          onClick={() => updateArea(index)}
-                        >
-                          閉じる
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="contained"
-                          sx={{ m: 1 }}
-                          onClick={() => updateArea(index)}
-                        >
-                          編集
-                        </Button>
-                      )}
-                      {updateAreaDisplay[index] && (
-                        <>
-                          <input
-                            type="text"
-                            style={{
-                              width: "20%",
-                              height: "45px",
-                              margin: "20px",
-                            }}
-                            name={`areaNameList[${index}]`}
-                            placeholder={"例：関東"}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => setAreaNames(e.target.value, index)}
-                          />
-                          <Button
-                            variant="contained"
-                            sx={{ m: 1 }}
-                            onClick={() => onClickUpdate(index)}
-                          >
-                            編集
-                          </Button>
-                        </>
-                      )}
-                    </Grid>
-                    <IconButton
-                      aria-label="delete image"
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        color: "#aaa",
-                      }}
-                      onClick={() => onClickRemove(index)}
+                    {updateAreaDisplay[index] ? "閉じる" : "編集"}
+                  </Button>
+                </Box>
+
+                {updateAreaDisplay[index] && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { xs: "stretch", sm: "flex-end" },
+                      gap: 2,
+                      mt: 2,
+                      pt: 2,
+                      borderTop: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  >
+                    <TextField
+                      label="新しいエリア名"
+                      placeholder="例：関東"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setAreaNames(e.target.value, index)
+                      }
+                      sx={{ flex: 1, maxWidth: { sm: 300 } }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={() => onClickUpdate(index)}
                     >
-                      <CancelIcon />
-                    </IconButton>
-                  </Paper>
-                )
-              })}
-            </Box>
-          </>
-        )}
-      </Box>
+                      更新
+                    </Button>
+                  </Box>
+                )}
+
+                <IconButton
+                  aria-label="delete image"
+                  onClick={() => onClickRemove(index)}
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    color: "text.secondary",
+                    "&:hover": {
+                      color: "error.main",
+                      bgcolor: "rgba(239, 68, 68, 0.08)",
+                    },
+                  }}
+                >
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Paper>
+            ))}
+          </Box>
+        </>
+      )}
       <ErrorDialog
         error={error}
         errorPart={errorPart}

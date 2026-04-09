@@ -5,10 +5,14 @@ import {
   Box,
   Button,
   Checkbox,
+  Chip,
   FormControlLabel,
   Grid,
   IconButton,
   Paper,
+  Radio,
+  RadioGroup,
+  TextField,
   Typography,
 } from "@mui/material"
 import { useEffect, useState } from "react"
@@ -321,602 +325,378 @@ export default function UserAccountManagementClient({
 
   return (
     <>
-      <Box>
-        <Typography>アカウント一覧管理</Typography>
-        {!displayFlg ? (
-          <Typography>データ取得中</Typography>
-        ) : (
-          <>
-            <Grid>
-              {createDisplay ? (
-                <Button
-                  variant="contained"
-                  sx={{ m: 1 }}
-                  onClick={() => setCreateDisplay(false)}
-                >
-                  閉じる
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  sx={{ m: 1 }}
-                  onClick={() => setCreateDisplay(true)}
-                >
-                  アカウント追加
-                </Button>
-              )}
-              {createDisplay && (
-                <Paper
-                  sx={{ height: 1 / 5, m: 1 }}
-                  key={"key"}
-                  style={{ position: "relative" }}
-                >
-                  <Grid container>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          メールアドレス（ログイン用）：{" "}
-                        </Typography>
-                        <input
-                          type="text"
-                          style={{ width: "50%" }}
-                          name={"email"}
-                          placeholder={"email"}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setEmail(e.target.value)
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          パスワード：{" "}
-                        </Typography>
-                        <input
-                          type="password"
-                          style={{ width: "50%" }}
-                          name={"password"}
-                          placeholder={"パスワード"}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setPassword(e.target.value)
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          ユーザー名：{" "}
-                        </Typography>
-                        <input
-                          type="text"
-                          style={{ width: "50%" }}
-                          name={"userName"}
-                          placeholder={"名前"}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            setUserName(e.target.value)
-                          }
-                        />
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          権限：{" "}
-                        </Typography>
-                        <FormControlLabel
-                          label={"管理者"}
-                          labelPlacement="start"
-                          control={
-                            <input
-                              type="radio"
-                              style={{ width: "20%" }}
-                              name={"management"}
-                              value={"management"}
-                              checked={management === "management"}
-                              onChange={handleOptionChange}
-                            />
-                          }
-                          style={{ marginRight: "0px", width: "75px" }}
-                        />
-                        <FormControlLabel
-                          label={"利用者"}
-                          labelPlacement="start"
-                          control={
-                            <input
-                              type="radio"
-                              style={{ width: "20%" }}
-                              name={"management"}
-                              value={"user"}
-                              checked={management === "user"}
-                              onChange={handleOptionChange}
-                            />
-                          }
-                          style={{ marginRight: "0px", width: "75px" }}
-                        />
-                      </Grid>
-                    </Grid>
-                    <Grid
-                      size={8}
-                      container
-                      style={{
-                        minWidth: "550px",
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "20px",
-                      }}
-                    >
-                      <Grid
-                        style={{
-                          display: "flex",
-                          height: "45px",
-                          padding: "5px",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <Typography style={{ lineHeight: "35px" }}>
-                          エリア設定：{" "}
-                        </Typography>
-                        <Grid style={{ display: "flex", flexWrap: "wrap" }}>
-                          {contentList.map((content, index) => {
-                            return (
-                              <FormControlLabel
-                                label={content.areaName}
-                                labelPlacement="start"
-                                key={`area_check${content.areaId}`}
-                                control={
-                                  <Checkbox
-                                    name={`area[${index}]`}
-                                    checked={area[index]}
-                                    onChange={() => onChangeCheckBox(index)}
-                                    style={{ width: "20px" }}
-                                  />
-                                }
-                                style={{ marginRight: "0px" }}
-                              />
-                            )
-                          })}
-                        </Grid>
-                      </Grid>
-                    </Grid>
-                  </Grid>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        アカウント一覧管理
+      </Typography>
+      {!displayFlg ? (
+        <Typography sx={{ color: "text.secondary" }}>データ取得中</Typography>
+      ) : (
+        <>
+          <Box sx={{ mb: 2 }}>
+            <Button
+              variant={createDisplay ? "outlined" : "contained"}
+              onClick={() => setCreateDisplay(!createDisplay)}
+            >
+              {createDisplay ? "閉じる" : "アカウント追加"}
+            </Button>
+          </Box>
+
+          {/* Create form */}
+          {createDisplay && (
+            <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                新規アカウント追加
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="メールアドレス（ログイン用）"
+                    placeholder="email"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setEmail(e.target.value)
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="パスワード"
+                    type="password"
+                    placeholder="パスワード"
+                    value={password}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setPassword(e.target.value)
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="ユーザー名"
+                    placeholder="名前"
+                    value={userName}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setUserName(e.target.value)
+                    }
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 0.5, color: "text.secondary" }}
+                  >
+                    権限
+                  </Typography>
+                  <RadioGroup
+                    row
+                    value={management}
+                    onChange={handleOptionChange}
+                  >
+                    <FormControlLabel
+                      value="management"
+                      control={<Radio size="small" />}
+                      label="管理者"
+                    />
+                    <FormControlLabel
+                      value="user"
+                      control={<Radio size="small" />}
+                      label="利用者"
+                    />
+                  </RadioGroup>
+                </Grid>
+                <Grid size={12}>
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 0.5, color: "text.secondary" }}
+                  >
+                    エリア設定
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {contentList.map((content, index) => (
+                      <FormControlLabel
+                        key={`area_check${content.areaId}`}
+                        label={content.areaName}
+                        control={
+                          <Checkbox
+                            name={`area[${index}]`}
+                            checked={area[index]}
+                            onChange={() => onChangeCheckBox(index)}
+                            size="small"
+                          />
+                        }
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+                <Grid size={12}>
                   <Button
                     disabled={
                       email === "" || userName === "" || password === ""
                     }
                     variant="contained"
-                    sx={{ m: 1 }}
                     onClick={onClickCreate}
                   >
                     追加
                   </Button>
-                </Paper>
-              )}
-            </Grid>
-            <Box style={{ display: "flex", flexDirection: "column" }}>
-              {userList.map((user, index) => {
-                const areas: string[] = user.coverageArea
-                  .map((areaItem: string) => {
-                    const list = contentList.filter(
-                      (content) => content.areaId === areaItem,
-                    )
-                    return list[0]?.areaName
-                  })
-                  .filter((item): item is string => !!item)
-                return (
-                  <Paper
-                    sx={{ height: 1 / 5, m: 1 }}
-                    key={`key${user.uid}`}
-                    style={{ position: "relative" }}
-                  >
-                    <Grid container>
-                      <Grid
-                        size={5}
-                        container
-                        style={{
-                          minWidth: "550px",
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: "20px",
-                        }}
-                      >
-                        <Grid
-                          style={{
-                            display: "flex",
-                            height: "45px",
-                            padding: "5px",
-                          }}
-                        >
-                          <Typography style={{ lineHeight: "35px" }}>
-                            ユーザー名： {user.userName}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                      {!settingDisplay[index] &&
-                        (detailDisplay[index] ? (
-                          <Button
-                            variant="contained"
-                            sx={{ m: 1 }}
-                            onClick={() => handleDetail(index)}
-                          >
-                            閉じる
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            sx={{ m: 1 }}
-                            onClick={() => handleDetail(index)}
-                          >
-                            詳細
-                          </Button>
-                        ))}
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
 
-                      {detailDisplay[index] && (
-                        <Grid container>
-                          <Grid
-                            size={8}
-                            container
-                            style={{
-                              minWidth: "550px",
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              padding: "20px",
-                            }}
-                          >
-                            <Grid
-                              style={{
-                                display: "flex",
-                                height: "45px",
-                                padding: "5px",
-                              }}
-                            >
-                              <Typography style={{ lineHeight: "35px" }}>
-                                権限： {user.management ? "管理者" : "利用者"}
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                          <Grid
-                            size={8}
-                            container
-                            style={{
-                              minWidth: "550px",
-                              display: "flex",
-                              flexDirection: "row",
-                              alignItems: "center",
-                              padding: "20px",
-                            }}
-                          >
-                            <Grid
-                              style={{
-                                display: "flex",
-                                height: "45px",
-                                padding: "5px",
-                              }}
-                            >
-                              <Typography
-                                style={{
-                                  lineHeight: "35px",
-                                  display: "flex",
-                                  flexDirection: "row",
-                                }}
-                              >
-                                エリア設定：{" "}
-                                {areas.length > 0 ? (
-                                  areas.map((areaItem) => (
-                                    <Grid
-                                      key={`areaList_${areaItem}`}
-                                      style={{ padding: "0 10px" }}
-                                    >
-                                      {areaItem}
-                                    </Grid>
-                                  ))
-                                ) : (
-                                  <Grid
-                                    style={{
-                                      lineHeight: "35px",
-                                      padding: "0 10px",
-                                    }}
-                                  >
-                                    設定なし
-                                  </Grid>
-                                )}
-                              </Typography>
-                            </Grid>
-                          </Grid>
-                        </Grid>
+          {/* User list */}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {userList.map((user, index) => {
+              const areas: string[] = user.coverageArea
+                .map((areaItem: string) => {
+                  const list = contentList.filter(
+                    (content) => content.areaId === areaItem,
+                  )
+                  return list[0]?.areaName
+                })
+                .filter((item): item is string => !!item)
+              return (
+                <Paper
+                  elevation={0}
+                  key={`key${user.uid}`}
+                  sx={{
+                    p: { xs: 2, sm: 3 },
+                    position: "relative",
+                    "&:hover": {
+                      borderColor: "primary.main",
+                      transition: "border-color 0.2s",
+                    },
+                  }}
+                >
+                  {/* Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: { xs: "flex-start", sm: "center" },
+                      gap: 2,
+                      pr: 5,
+                    }}
+                  >
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, flex: 1 }}
+                    >
+                      {user.userName}
+                    </Typography>
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                      {!settingDisplay[index] && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleDetail(index)}
+                        >
+                          {detailDisplay[index] ? "閉じる" : "詳細"}
+                        </Button>
                       )}
-                      {!detailDisplay[index] &&
-                        (settingDisplay[index] ? (
-                          <Button
-                            variant="contained"
-                            sx={{ m: 1 }}
-                            onClick={() => handleSetting(index)}
-                          >
-                            閉じる
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="contained"
-                            sx={{ m: 1 }}
-                            onClick={() => handleSetting(index)}
-                          >
-                            編集
-                          </Button>
-                        ))}
-                      {settingDisplay[index] && (
-                        <>
-                          <Grid container>
-                            <Grid
-                              size={8}
-                              container
-                              style={{
-                                minWidth: "550px",
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                padding: "20px",
-                              }}
+                      {!detailDisplay[index] && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleSetting(index)}
+                        >
+                          {settingDisplay[index] ? "閉じる" : "編集"}
+                        </Button>
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* Detail view */}
+                  {detailDisplay[index] && (
+                    <Box
+                      sx={{
+                        mt: 2,
+                        pt: 2,
+                        borderTop: "1px solid",
+                        borderColor: "divider",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        権限:{" "}
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{ color: "text.primary" }}
+                        >
+                          {user.management ? "管理者" : "利用者"}
+                        </Typography>
+                      </Typography>
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary", mb: 0.5 }}
+                        >
+                          エリア設定:
+                        </Typography>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
+                          {areas.length > 0 ? (
+                            areas.map((areaItem) => (
+                              <Chip
+                                key={`areaList_${areaItem}`}
+                                label={areaItem}
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              sx={{ color: "text.secondary" }}
                             >
-                              <Grid
-                                style={{
-                                  display: "flex",
-                                  height: "45px",
-                                  padding: "5px",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Typography style={{ lineHeight: "35px" }}>
-                                  ユーザー名：{" "}
-                                </Typography>
-                                <input
-                                  type="text"
-                                  style={{ width: "50%" }}
-                                  name={`users[${index}].userName`}
-                                  placeholder={user.userName}
-                                  disabled={users[index]?.userNameFlg}
-                                  onChange={(
-                                    e: React.ChangeEvent<HTMLInputElement>,
-                                  ) => onSettingChangeUserName(e, index)}
+                              設定なし
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Edit view */}
+                  {settingDisplay[index] && (
+                    <Box
+                      sx={{
+                        mt: 2,
+                        pt: 2,
+                        borderTop: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <TextField
+                              fullWidth
+                              label="ユーザー名"
+                              placeholder={user.userName}
+                              disabled={users[index]?.userNameFlg}
+                              onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>,
+                              ) => onSettingChangeUserName(e, index)}
+                            />
+                            <FormControlLabel
+                              label="変更しない"
+                              control={
+                                <Checkbox
+                                  checked={users[index]?.userNameFlg}
+                                  onChange={() =>
+                                    onSettingUserNameCheckBox(index)
+                                  }
+                                  size="small"
                                 />
-                              </Grid>
+                              }
+                              sx={{ whiteSpace: "nowrap" }}
+                            />
+                          </Box>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ mb: 0.5, color: "text.secondary" }}
+                          >
+                            権限
+                          </Typography>
+                          <RadioGroup
+                            row
+                            value={users[index]?.management ?? "user"}
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => handleSettingOptionChange(e, index)}
+                          >
+                            <FormControlLabel
+                              value="management"
+                              control={<Radio size="small" disabled />}
+                              label="管理者"
+                            />
+                            <FormControlLabel
+                              value="user"
+                              control={<Radio size="small" disabled />}
+                              label="利用者"
+                            />
+                          </RadioGroup>
+                        </Grid>
+                        <Grid size={12}>
+                          <Typography
+                            variant="body2"
+                            sx={{ mb: 0.5, color: "text.secondary" }}
+                          >
+                            エリア設定
+                          </Typography>
+                          <Box
+                            sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}
+                          >
+                            {contentList.map((content, i) => (
                               <FormControlLabel
-                                label={"変更しない"}
-                                labelPlacement="start"
+                                key={`areaName_${content.areaId}`}
+                                label={content.areaName}
                                 control={
                                   <Checkbox
-                                    name={`users[${index}].userNameFlg`}
-                                    checked={users[index]?.userNameFlg}
+                                    name={`users[${index}].coverageArea`}
+                                    checked={users[index]?.coverageArea[i]}
                                     onChange={() =>
-                                      onSettingUserNameCheckBox(index)
+                                      onSettingChangeCheckBox(index, i)
                                     }
-                                    style={{ width: "20px" }}
+                                    size="small"
                                   />
                                 }
-                                style={{ marginRight: "0px" }}
                               />
-                            </Grid>
-                            <Grid
-                              size={8}
-                              container
-                              style={{
-                                minWidth: "550px",
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                padding: "20px",
-                              }}
-                            >
-                              <Grid
-                                style={{
-                                  display: "flex",
-                                  height: "45px",
-                                  padding: "5px",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Typography style={{ lineHeight: "35px" }}>
-                                  権限：{" "}
-                                </Typography>
-                                <FormControlLabel
-                                  label={"管理者"}
-                                  labelPlacement="start"
-                                  control={
-                                    <input
-                                      type="radio"
-                                      style={{ width: "20%" }}
-                                      name={`users[${index}].management`}
-                                      value={"management"}
-                                      disabled={true}
-                                      checked={
-                                        users[index] &&
-                                        users[index].management === "management"
-                                      }
-                                      onChange={(
-                                        e: React.ChangeEvent<HTMLInputElement>,
-                                      ) => handleSettingOptionChange(e, index)}
-                                    />
-                                  }
-                                  style={{ marginRight: "0px", width: "75px" }}
-                                />
-                                <FormControlLabel
-                                  label={"利用者"}
-                                  labelPlacement="start"
-                                  control={
-                                    <input
-                                      type="radio"
-                                      style={{ width: "20%" }}
-                                      name={`users[${index}].management`}
-                                      value={"user"}
-                                      disabled={true}
-                                      checked={
-                                        users[index] &&
-                                        users[index].management === "user"
-                                      }
-                                      onChange={(
-                                        e: React.ChangeEvent<HTMLInputElement>,
-                                      ) => handleSettingOptionChange(e, index)}
-                                    />
-                                  }
-                                  style={{ marginRight: "0px", width: "75px" }}
-                                />
-                              </Grid>
-                            </Grid>
-                            <Grid
-                              size={8}
-                              container
-                              style={{
-                                minWidth: "550px",
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                padding: "20px",
-                              }}
-                            >
-                              <Grid
-                                style={{
-                                  display: "flex",
-                                  height: "45px",
-                                  padding: "5px",
-                                  justifyContent: "space-between",
-                                }}
-                              >
-                                <Typography style={{ lineHeight: "35px" }}>
-                                  エリア設定：{" "}
-                                </Typography>
-                                <Grid
-                                  style={{ display: "flex", flexWrap: "wrap" }}
-                                >
-                                  {contentList.map((content, i) => {
-                                    return (
-                                      <FormControlLabel
-                                        label={content.areaName}
-                                        labelPlacement="start"
-                                        key={`areaName_${content.areaId}`}
-                                        control={
-                                          <Checkbox
-                                            name={
-                                              "users[" +
-                                              index +
-                                              "].coverageArea"
-                                            }
-                                            checked={
-                                              users[index]?.coverageArea[i]
-                                            }
-                                            onChange={() =>
-                                              onSettingChangeCheckBox(index, i)
-                                            }
-                                            style={{ width: "20px" }}
-                                          />
-                                        }
-                                        style={{ marginRight: "0px" }}
-                                      />
-                                    )
-                                  })}
-                                </Grid>
-                              </Grid>
-                            </Grid>
-                          </Grid>
+                            ))}
+                          </Box>
+                        </Grid>
+                        <Grid size={12}>
                           <Button
                             variant="contained"
-                            sx={{ m: 1 }}
                             onClick={() => onClickUpdate(index)}
                           >
-                            編集
+                            更新
                           </Button>
-                        </>
-                      )}
-                    </Grid>
-                    <IconButton
-                      aria-label="delete image"
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        color: "#aaa",
-                      }}
-                      onClick={() => onClickRemove(index)}
-                    >
-                      <CancelIcon />
-                    </IconButton>
-                  </Paper>
-                )
-              })}
-            </Box>
-          </>
-        )}
-      </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  )}
+
+                  <IconButton
+                    aria-label="delete image"
+                    onClick={() => onClickRemove(index)}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      color: "text.secondary",
+                      "&:hover": {
+                        color: "error.main",
+                        bgcolor: "rgba(239, 68, 68, 0.08)",
+                      },
+                    }}
+                  >
+                    <CancelIcon fontSize="small" />
+                  </IconButton>
+                </Paper>
+              )
+            })}
+          </Box>
+        </>
+      )}
       <ErrorDialog
         error={error}
         errorPart="エリア追加時のエリア名"

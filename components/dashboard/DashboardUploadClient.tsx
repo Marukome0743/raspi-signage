@@ -1,12 +1,16 @@
 "use client"
 
 import CancelIcon from "@mui/icons-material/Cancel"
+import CloudUploadIcon from "@mui/icons-material/CloudUpload"
 import {
   Box,
   Button,
+  Grid,
   IconButton,
+  Paper,
   ToggleButton,
   ToggleButtonGroup,
+  Typography,
 } from "@mui/material"
 import { useId, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
@@ -140,94 +144,134 @@ export default function DashboardUploadClient(): React.JSX.Element {
   }
 
   return (
-    <div>
-      <Box sx={{ display: "flex", m: 2, fontSize: "1rem" }}>
-        最大４つまでの画像/動画を選択してアップロード
-      </Box>
-      <ToggleButtonGroup
-        color="primary"
-        value={type}
-        exclusive
-        onChange={toggleUploadType}
-        aria-label="type"
-        sx={{ height: "2rem" }}
-      >
-        <ToggleButton sx={{ width: "4rem" }} value="image">
-          画像
-        </ToggleButton>
-        <ToggleButton sx={{ width: "4rem" }} value="video">
-          動画
-        </ToggleButton>
-      </ToggleButtonGroup>
-      <form action="" style={{ marginTop: "0.5rem" }}>
-        <label htmlFor={inputId}>
-          <Button
-            variant="contained"
-            disabled={images.length >= maxImageUpload || orderId == null}
-            component="span"
-            style={{ width: "8rem" }}
-          >
-            {type === "image" ? "画像追加" : "動画追加"}
-          </Button>
-          <input
-            id={inputId}
-            type="file"
-            multiple
-            disabled={images.length >= maxImageUpload || orderId == null}
-            onChange={(e) => handleOnAddImage(e)}
-            style={{ display: "none" }}
-          />
-        </label>
-        <Button
-          variant="contained"
-          onClick={(e) => handleOnUpload(e)}
-          disabled={images.length < 1 || orderId == null}
-          style={{ width: "8rem", margin: "1rem" }}
+    <Box>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        コンテンツアップロード
+      </Typography>
+      <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          最大4つまでの画像/動画を選択してアップロード
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
+            gap: 2,
+            mb: 3,
+          }}
         >
-          アップロード
-        </Button>
-        <div style={{ display: "flex" }}>
-          {images.map((image, i) => {
-            const id = `video_${i}`
-            return (
-              <div
-                key={image.name}
-                style={{ position: "relative", width: "40%", margin: "0.5rem" }}
+          <ToggleButtonGroup
+            color="primary"
+            value={type}
+            exclusive
+            onChange={toggleUploadType}
+            aria-label="type"
+            size="small"
+          >
+            <ToggleButton sx={{ px: 3 }} value="image">
+              画像
+            </ToggleButton>
+            <ToggleButton sx={{ px: 3 }} value="video">
+              動画
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <label htmlFor={inputId}>
+              <Button
+                variant="outlined"
+                disabled={images.length >= maxImageUpload || orderId == null}
+                component="span"
+                startIcon={<CloudUploadIcon />}
               >
-                <IconButton
-                  aria-label="delete image"
-                  style={{
-                    position: "absolute",
-                    top: 10,
-                    left: 10,
-                    color: "#aaa",
-                  }}
-                  onClick={() => handleOnRemoveImage(i)}
-                >
-                  <CancelIcon />
-                </IconButton>
-                {type === "image" ? (
-                  // biome-ignore lint/performance/noImgElement: blob URL preview
-                  <img
-                    src={previews[i]}
-                    style={{ width: "100%" }}
-                    alt="アップロードプレビュー"
-                  />
-                ) : (
-                  // biome-ignore lint/a11y/useMediaCaption: preview video
-                  <video id={id} src={previews[i]} style={{ width: "100%" }} />
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </form>
+                {type === "image" ? "画像追加" : "動画追加"}
+              </Button>
+              <input
+                id={inputId}
+                type="file"
+                multiple
+                disabled={images.length >= maxImageUpload || orderId == null}
+                onChange={(e) => handleOnAddImage(e)}
+                style={{ display: "none" }}
+              />
+            </label>
+            <Button
+              variant="contained"
+              onClick={(e) => handleOnUpload(e)}
+              disabled={images.length < 1 || orderId == null}
+            >
+              アップロード
+            </Button>
+          </Box>
+        </Box>
+        {images.length > 0 && (
+          <Grid container spacing={2}>
+            {images.map((image, i) => {
+              const id = `video_${i}`
+              return (
+                <Grid size={{ xs: 12, sm: 6 }} key={image.name}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      position: "relative",
+                      p: 1,
+                      bgcolor: "background.default",
+                    }}
+                  >
+                    <IconButton
+                      aria-label="delete image"
+                      sx={{
+                        position: "absolute",
+                        top: 4,
+                        right: 4,
+                        zIndex: 1,
+                        bgcolor: "rgba(0,0,0,0.4)",
+                        "&:hover": {
+                          bgcolor: "rgba(239, 68, 68, 0.3)",
+                          color: "error.main",
+                        },
+                      }}
+                      onClick={() => handleOnRemoveImage(i)}
+                      size="small"
+                    >
+                      <CancelIcon fontSize="small" />
+                    </IconButton>
+                    {type === "image" ? (
+                      // biome-ignore lint/performance/noImgElement: blob URL preview
+                      <img
+                        src={previews[i]}
+                        style={{
+                          width: "100%",
+                          borderRadius: 8,
+                          display: "block",
+                        }}
+                        alt="アップロードプレビュー"
+                      />
+                    ) : (
+                      // biome-ignore lint/a11y/useMediaCaption: preview video
+                      <video
+                        id={id}
+                        src={previews[i]}
+                        style={{
+                          width: "100%",
+                          borderRadius: 8,
+                          display: "block",
+                        }}
+                      />
+                    )}
+                  </Paper>
+                </Grid>
+              )
+            })}
+          </Grid>
+        )}
+      </Paper>
       <ErrorDialog
         error={error}
         errorPart={errorPart}
         open={showError}
         onClose={handleCloseError}
       />
-    </div>
+    </Box>
   )
 }

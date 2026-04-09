@@ -5,7 +5,7 @@ import Avatar from "@mui/material/Avatar"
 import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Container from "@mui/material/Container"
-import CssBaseline from "@mui/material/CssBaseline"
+import Paper from "@mui/material/Paper"
 import TextField from "@mui/material/TextField"
 import Typography from "@mui/material/Typography"
 import { useRouter } from "next/navigation"
@@ -99,68 +99,79 @@ export default function PasswordResetPage(): React.JSX.Element {
 
   return (
     <Container component="main" maxWidth="xs">
-      <CssBaseline />
       <Box
         sx={{
-          marginTop: 8,
+          minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5">
-          パスワード再設定
-        </Typography>
-        <Box component="form" onSubmit={onSubmit} sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            type="password"
-            required
-            fullWidth
-            id="password"
-            label="現在のパスワード"
-            name="nowPassword"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNowPassword(e.target.value)
-            }
-            autoFocus
-          />
-          <TextField
-            margin="normal"
-            type="password"
-            required
-            fullWidth
-            id="password"
-            label="新しいパスワード"
-            name="newPassword"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNewPassword(e.target.value)
-            }
-          />
-          <TextField
-            margin="normal"
-            type="password"
-            required
-            fullWidth
-            id="password"
-            label="新しいパスワード（再入力）"
-            name="newRePassword"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setNewRePassword(e.target.value)
-            }
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <Avatar sx={{ m: 1, width: 48, height: 48 }}>
+            <LockOutlinedIcon />
+          </Avatar>
+          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
             パスワード再設定
-          </Button>
-        </Box>
+          </Typography>
+          <Box component="form" onSubmit={onSubmit} sx={{ width: "100%" }}>
+            <TextField
+              margin="normal"
+              type="password"
+              required
+              fullWidth
+              id="password"
+              label="現在のパスワード"
+              name="nowPassword"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNowPassword(e.target.value)
+              }
+              autoFocus
+            />
+            <TextField
+              margin="normal"
+              type="password"
+              required
+              fullWidth
+              id="newPassword"
+              label="新しいパスワード"
+              name="newPassword"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewPassword(e.target.value)
+              }
+            />
+            <TextField
+              margin="normal"
+              type="password"
+              required
+              fullWidth
+              id="newRePassword"
+              label="新しいパスワード（再入力）"
+              name="newRePassword"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setNewRePassword(e.target.value)
+              }
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 3, mb: 2, py: 1.2 }}
+            >
+              パスワード再設定
+            </Button>
+          </Box>
+        </Paper>
       </Box>
       <ErrorDialog
         error={error}

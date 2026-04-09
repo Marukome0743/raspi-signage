@@ -1,7 +1,6 @@
 "use client"
 
-import type { SxProps, Theme } from "@mui/material"
-import { Box, Button, Grid, Paper, Typography } from "@mui/material"
+import { Box, Button, Grid, Paper, TextField, Typography } from "@mui/material"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
@@ -21,13 +20,6 @@ import type { ContentItem, PixelSizeInfo } from "@/src/supabase/database.types"
 
 interface DisplayContentItem extends ContentItem {
   delete?: boolean
-}
-
-const formRowSx: SxProps<Theme> = {
-  display: "flex",
-  minWidth: "550px",
-  height: "45px",
-  padding: "5px",
 }
 
 export default function ViewPositionClient(): React.JSX.Element {
@@ -160,22 +152,24 @@ export default function ViewPositionClient(): React.JSX.Element {
 
   return (
     <>
-      <Box>
-        <Typography>表示画面調整</Typography>
-        {pixelSize == null || (pixelSize && !pixelSize.displayContentFlg) ? (
-          <>
-            <Typography>サイネージ表示画面枠設定</Typography>
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        表示画面調整
+      </Typography>
+      {pixelSize == null || (pixelSize && !pixelSize.displayContentFlg) ? (
+        <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="subtitle1" sx={{ mb: 2 }}>
+            サイネージ表示画面枠設定
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Button
-              variant="contained"
-              sx={{ m: 1 }}
+              variant="outlined"
               disabled={true}
               onClick={() => onClickCreate(0, 0)}
             >
               小
             </Button>
             <Button
-              variant="contained"
-              sx={{ m: 1 }}
+              variant="outlined"
               disabled={true}
               onClick={() => onClickCreate(0, 0)}
             >
@@ -183,183 +177,198 @@ export default function ViewPositionClient(): React.JSX.Element {
             </Button>
             <Button
               variant="contained"
-              sx={{ m: 1 }}
               disabled={orderId == null}
               onClick={() => onClickCreate(1746, 844)}
             >
               大
             </Button>
-          </>
-        ) : (
-          <>
-            <Button variant="contained" sx={{ m: 1 }} onClick={onClickUpdate}>
+          </Box>
+        </Paper>
+      ) : (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Button variant="contained" onClick={onClickUpdate}>
               更新
             </Button>
-            <Button variant="contained" sx={{ m: 1 }} onClick={onClickReset}>
+            <Button variant="outlined" onClick={onClickReset}>
               サイネージ画面枠リセット
             </Button>
-            <Box style={{ display: "flex", flexDirection: "column" }}>
-              <Paper
-                sx={{ height: 1 / 5, m: 1 }}
-                key={"key"}
-                style={{ position: "relative" }}
-              >
-                <Grid container>
-                  <Grid
-                    style={{
-                      display: "flex",
-                      minWidth: "730px",
-                      height: "45px",
-                      padding: "5px",
-                      justifyContent: "space-around",
-                    }}
-                  >
-                    <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                      サイネージ画面枠(高さ)： {pixelSize.pixelHeight}px
-                    </Typography>
-                    <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                      サイネージ画面枠(幅)： {pixelSize.pixelWidth}px
-                    </Typography>
-                  </Grid>
-                  <Grid
-                    size={8}
-                    container
-                    sx={{ flexDirection: "column" }}
-                    style={{ padding: "20px", paddingTop: "10px" }}
-                  >
-                    <Grid sx={formRowSx}>
-                      <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                        サイネージ画像(高さ)：{" "}
-                      </Typography>
-                      <input
-                        type="number"
-                        style={{ width: "20%" }}
-                        name={"height"}
-                        placeholder={String(pixelSize.height)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setHeight(Number(e.target.value))
-                        }
-                      />
-                    </Grid>
-                    <Grid sx={formRowSx}>
-                      <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                        サイネージ画像(幅)：{" "}
-                      </Typography>
-                      <input
-                        type="number"
-                        style={{ width: "20%" }}
-                        name={"width"}
-                        placeholder={String(pixelSize.width)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setWidth(Number(e.target.value))
-                        }
-                      />
-                    </Grid>
-                    <Grid sx={formRowSx}>
-                      <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                        サイネージ上部余白：{" "}
-                      </Typography>
-                      <input
-                        type="number"
-                        style={{ width: "20%" }}
-                        name={"marginTop"}
-                        placeholder={String(pixelSize.marginTop)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setMarginTop(Number(e.target.value))
-                        }
-                      />
-                    </Grid>
-                    <Grid sx={formRowSx}>
-                      <Typography style={{ width: "33%", lineHeight: "35px" }}>
-                        サイネージ左部余白：{" "}
-                      </Typography>
-                      <input
-                        type="number"
-                        style={{ width: "20%" }}
-                        name={"marginLeft"}
-                        placeholder={String(pixelSize.marginLeft)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setMarginLeft(Number(e.target.value))
-                        }
-                      />
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Paper>
-              <Button
-                variant="contained"
-                sx={{ m: 1 }}
-                onClick={() => setDisplayFlg(!displayFlg)}
-              >
-                下部へ反映（更新は行われてません）
-              </Button>
-              <Box>
-                <Typography>
-                  表示画面調整イメージ（約10分の1で表示しています）
+          </Box>
+
+          <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
+            {/* Screen frame info */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 3 },
+                mb: 3,
+                p: 2,
+                borderRadius: 2,
+                bgcolor: "background.default",
+              }}
+            >
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                画面枠(高さ):{" "}
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{ color: "text.primary", fontWeight: 600 }}
+                >
+                  {pixelSize.pixelHeight}px
                 </Typography>
-                {displayFlg && (
-                  <Paper style={{ position: "relative", height: "240px" }}>
-                    <Grid
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                画面枠(幅):{" "}
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{ color: "text.primary", fontWeight: 600 }}
+                >
+                  {pixelSize.pixelWidth}px
+                </Typography>
+              </Typography>
+            </Box>
+
+            {/* Form fields */}
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="サイネージ画像(高さ)"
+                  type="number"
+                  placeholder={String(pixelSize.height)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setHeight(Number(e.target.value))
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="サイネージ画像(幅)"
+                  type="number"
+                  placeholder={String(pixelSize.width)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setWidth(Number(e.target.value))
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="サイネージ上部余白"
+                  type="number"
+                  placeholder={String(pixelSize.marginTop)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setMarginTop(Number(e.target.value))
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="サイネージ左部余白"
+                  type="number"
+                  placeholder={String(pixelSize.marginLeft)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setMarginLeft(Number(e.target.value))
+                  }
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+
+          <Button variant="outlined" onClick={() => setDisplayFlg(!displayFlg)}>
+            {displayFlg
+              ? "プレビューを閉じる"
+              : "下部へ反映（更新は行われてません）"}
+          </Button>
+
+          {displayFlg && (
+            <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography
+                variant="body2"
+                sx={{ mb: 2, color: "text.secondary" }}
+              >
+                表示画面調整イメージ（約10分の1で表示しています）
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: "background.default",
+                }}
+              >
+                <Box
+                  sx={{
+                    bgcolor: "#000",
+                    height: pixelSize.pixelHeight / 10,
+                    width: pixelSize.pixelWidth / 10,
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    borderRadius: 1,
+                  }}
+                >
+                  {contents_list ? (
+                    contents_list.type === "image" ? (
+                      <Image
+                        src={contents_list.path}
+                        width={0}
+                        height={0}
+                        unoptimized
+                        style={{
+                          height: height / 10,
+                          width: width / 10,
+                          marginTop: marginTop / 10,
+                          marginLeft: marginLeft / 10,
+                          objectFit: "contain",
+                        }}
+                        alt="コンテンツプレビュー"
+                      />
+                    ) : (
+                      <video
+                        src={contents_list.path}
+                        style={{
+                          height: height / 10,
+                          width: width / 10,
+                          marginTop: marginTop / 10,
+                          marginLeft: marginLeft / 10,
+                          objectFit: "contain",
+                        }}
+                        muted
+                        autoPlay
+                        loop
+                        playsInline
+                      />
+                    )
+                  ) : (
+                    <Box
+                      sx={{
+                        bgcolor: "background.paper",
                         height: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Grid
-                        style={{
-                          backgroundColor: "#000",
-                          height: pixelSize.pixelHeight / 10,
-                          width: pixelSize.pixelWidth / 10,
-                        }}
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
                       >
-                        {contents_list ? (
-                          contents_list.type === "image" ? (
-                            <Image
-                              src={contents_list.path}
-                              width={0}
-                              height={0}
-                              unoptimized
-                              style={{
-                                height: height / 10,
-                                width: width / 10,
-                                marginTop: marginTop / 10,
-                                marginLeft: marginLeft / 10,
-                                objectFit: "contain",
-                              }}
-                              alt="コンテンツプレビュー"
-                            />
-                          ) : (
-                            <video
-                              src={contents_list.path}
-                              style={{
-                                height: height / 10,
-                                width: width / 10,
-                                marginTop: marginTop / 10,
-                                marginLeft: marginLeft / 10,
-                                objectFit: "contain",
-                              }}
-                              muted
-                              autoPlay
-                              loop
-                              playsInline
-                            />
-                          )
-                        ) : (
-                          <Grid style={{ backgroundColor: "#fff" }}>
-                            イメージ画像
-                          </Grid>
-                        )}
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                )}
+                        イメージ画像
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          </>
-        )}
-      </Box>
+            </Paper>
+          )}
+        </Box>
+      )}
       <ErrorDialog
         error={error}
         errorPart={errorPart}

@@ -18,6 +18,9 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import CancelIcon from "@mui/icons-material/Cancel"
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator"
+import VisibilityIcon from "@mui/icons-material/Visibility"
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff"
 import {
   Box,
   Button,
@@ -28,6 +31,7 @@ import {
   List,
   ListItem,
   Paper,
+  TextField,
   Typography,
 } from "@mui/material"
 import Image from "next/image"
@@ -75,39 +79,57 @@ function SortableItem({
   }
 
   return (
-    <ListItem ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <ListItem ref={setNodeRef} style={style} {...attributes} sx={{ px: 0 }}>
       <Paper
-        sx={{ height: 1 / 5, m: 1 }}
-        style={{
+        elevation={0}
+        sx={{
+          width: "100%",
           position: "relative",
-          minWidth: "400px",
-          height: "100%",
+          p: { xs: 1.5, sm: 2 },
+          "&:hover": {
+            borderColor: "primary.main",
+            transition: "border-color 0.2s",
+          },
         }}
       >
-        <Grid container>
+        <Grid container spacing={2} sx={{ alignItems: "center" }}>
+          {/* Drag handle + checkbox */}
           <Grid
-            size={1}
-            style={{
+            size={{ xs: 12, sm: "auto" }}
+            sx={{
               display: "flex",
-              justifyContent: "center",
               alignItems: "center",
-              paddingBottom: "2rem",
-              minWidth: "45px",
+              gap: 1,
             }}
           >
+            <Box
+              {...listeners}
+              sx={{
+                cursor: "grab",
+                display: "flex",
+                color: "text.secondary",
+                "&:hover": { color: "primary.main" },
+              }}
+            >
+              <DragIndicatorIcon />
+            </Box>
             <FormControlLabel
               label="表示"
-              labelPlacement="top"
+              labelPlacement="end"
               control={
                 <Checkbox
                   name={name + index}
                   checked={checked}
                   onChange={(e) => onCheckBoxChange(e.target.name)}
+                  size="small"
                 />
               }
+              sx={{ mr: 0 }}
             />
           </Grid>
-          <Grid size={3} style={{ minWidth: "280px" }}>
+
+          {/* Preview */}
+          <Grid size={{ xs: 12, sm: 3 }}>
             {content.type === "image" ? (
               <Image
                 src={content.path}
@@ -115,10 +137,11 @@ function SortableItem({
                 height={0}
                 unoptimized
                 style={{
-                  width: "30vh",
+                  width: "100%",
+                  maxWidth: "200px",
                   height: "auto",
                   objectFit: "contain",
-                  margin: "1rem",
+                  borderRadius: 8,
                 }}
                 alt="コンテンツプレビュー"
               />
@@ -126,9 +149,10 @@ function SortableItem({
               <video
                 src={content.path}
                 style={{
-                  width: "30vh",
+                  width: "100%",
+                  maxWidth: "200px",
                   objectFit: "contain",
-                  margin: "1rem",
+                  borderRadius: 8,
                 }}
                 muted
                 autoPlay
@@ -137,50 +161,62 @@ function SortableItem({
               />
             )}
           </Grid>
-          <Grid size={6} container style={{ padding: "20px" }}>
-            <Grid style={{ padding: "5px" }}>
-              <Typography>ファイル名: {content.fileName}</Typography>
-            </Grid>
-            <Grid container sx={{ flexDirection: "column" }}>
-              <Grid
-                style={{
-                  display: "flex",
-                  minWidth: "550px",
-                  height: "45px",
-                  padding: "5px",
-                }}
-              >
-                <Typography style={{ width: "20%", lineHeight: "35px" }}>
-                  表示時間(秒):{" "}
-                </Typography>
-                <input
-                  type="number"
-                  style={{ width: "20%" }}
-                  name={name + index}
-                  disabled={content.type === "video"}
-                  placeholder={String(Number(content.viewTime / 1000))}
-                  onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                    eventHandler(event, index)
-                  }
-                />
-              </Grid>
-            </Grid>
+
+          {/* Info */}
+          <Grid size={{ xs: 12, sm: "grow" }}>
+            <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+              {content.fileName}
+            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+                表示時間(秒):
+              </Typography>
+              <TextField
+                type="number"
+                size="small"
+                disabled={content.type === "video"}
+                placeholder={String(Number(content.viewTime / 1000))}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  eventHandler(event, index)
+                }
+                sx={{ maxWidth: 120 }}
+              />
+            </Box>
+          </Grid>
+
+          {/* Delete */}
+          <Grid
+            size="auto"
+            sx={{
+              position: { xs: "absolute", sm: "static" },
+              top: 8,
+              right: 8,
+            }}
+          >
+            <IconButton
+              aria-label="delete image"
+              onClick={() => {
+                void onRemove(checked, index)
+              }}
+              size="small"
+              sx={{
+                color: "text.secondary",
+                "&:hover": {
+                  color: "error.main",
+                  bgcolor: "rgba(239, 68, 68, 0.08)",
+                },
+              }}
+            >
+              <CancelIcon />
+            </IconButton>
           </Grid>
         </Grid>
-        <IconButton
-          aria-label="delete image"
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            color: "#aaa",
-          }}
-          onClick={() => {
-            void onRemove(checked, index)
-          }}
-        >
-          <CancelIcon />
-        </IconButton>
       </Paper>
     </ListItem>
   )
@@ -361,69 +397,109 @@ export default function ManageContentsClient(): React.JSX.Element {
 
   return (
     <>
-      <Box>
-        <Typography>並び替え</Typography>
-        <Button variant="contained" sx={{ m: 1 }} onClick={onClickSubmit}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6">コンテンツ並び替え</Typography>
+        <Button variant="contained" onClick={onClickSubmit}>
           送信
         </Button>
       </Box>
-      <Box style={{ display: "flex", flexDirection: "column" }}>
-        <Typography>ー 表示コンテンツ</Typography>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEndDisplay}
-        >
-          <SortableContext
-            items={display.map((_, i) => `display-${i}`)}
-            strategy={verticalListSortingStrategy}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {/* Display section */}
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1,
+              color: "primary.main",
+            }}
           >
-            <List>
-              {display.map((content, i) => (
-                <SortableItem
-                  // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
-                  key={`display-${i}`}
-                  id={`display-${i}`}
-                  name="d"
-                  content={content}
-                  index={i}
-                  eventHandler={changeTempDisplay}
-                  checked={true}
-                  onCheckBoxChange={onChangeCheckBox}
-                  onRemove={onClickRemove}
-                />
-              ))}
-            </List>
-          </SortableContext>
-        </DndContext>
-        <Typography>ー 非表示コンテンツ</Typography>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEndHidden}
-        >
-          <SortableContext
-            items={hidden.map((_, i) => `hidden-${i}`)}
-            strategy={verticalListSortingStrategy}
+            <VisibilityIcon fontSize="small" />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              表示コンテンツ
+            </Typography>
+          </Box>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEndDisplay}
           >
-            <List>
-              {hidden.map((content, i) => (
-                <SortableItem
-                  // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
-                  key={`hidden-${i}`}
-                  id={`hidden-${i}`}
-                  name="h"
-                  content={content}
-                  index={i}
-                  eventHandler={changeTempHidden}
-                  checked={false}
-                  onCheckBoxChange={onChangeCheckBox}
-                  onRemove={onClickRemove}
-                />
-              ))}
-            </List>
-          </SortableContext>
-        </DndContext>
+            <SortableContext
+              items={display.map((_, i) => `display-${i}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {display.map((content, i) => (
+                  <SortableItem
+                    // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
+                    key={`display-${i}`}
+                    id={`display-${i}`}
+                    name="d"
+                    content={content}
+                    index={i}
+                    eventHandler={changeTempDisplay}
+                    checked={true}
+                    onCheckBoxChange={onChangeCheckBox}
+                    onRemove={onClickRemove}
+                  />
+                ))}
+              </List>
+            </SortableContext>
+          </DndContext>
+        </Box>
+
+        {/* Hidden section */}
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: 1,
+              color: "text.secondary",
+            }}
+          >
+            <VisibilityOffIcon fontSize="small" />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              非表示コンテンツ
+            </Typography>
+          </Box>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEndHidden}
+          >
+            <SortableContext
+              items={hidden.map((_, i) => `hidden-${i}`)}
+              strategy={verticalListSortingStrategy}
+            >
+              <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {hidden.map((content, i) => (
+                  <SortableItem
+                    // biome-ignore lint/suspicious/noArrayIndexKey: items lack stable unique IDs; index-based keys match SortableContext item IDs
+                    key={`hidden-${i}`}
+                    id={`hidden-${i}`}
+                    name="h"
+                    content={content}
+                    index={i}
+                    eventHandler={changeTempHidden}
+                    checked={false}
+                    onCheckBoxChange={onChangeCheckBox}
+                    onRemove={onClickRemove}
+                  />
+                ))}
+              </List>
+            </SortableContext>
+          </DndContext>
+        </Box>
       </Box>
       <ErrorDialog
         error={error}
