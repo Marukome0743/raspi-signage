@@ -46,7 +46,7 @@ This runs migrations and seeds the database with initial data:
 | Admin | <admin@example.com> | password123 | Admin |
 | User | <user@example.com> | password123 | General User |
 
-Seed data includes 2 areas (関東, 関西) with corresponding orders and pixel size settings.
+Seed data includes 8 areas (関東, 関西, 北海道, 東北, 中部, 中国, 四国, 九州) with corresponding orders and pixel size settings.
 
 ### 4. Install dependencies and start dev server
 
