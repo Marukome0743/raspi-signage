@@ -240,7 +240,6 @@ export default function AreaManagementClient({
                       <Grid
                         size={5}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",

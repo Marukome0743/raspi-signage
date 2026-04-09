@@ -189,7 +189,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -237,7 +236,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -285,7 +283,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -320,7 +317,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -355,7 +351,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -416,7 +411,6 @@ export default function AccountSettingManagementClient({
                       <Grid
                         size={8}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -472,7 +466,6 @@ export default function AccountSettingManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -496,7 +489,6 @@ export default function AccountSettingManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -520,7 +512,6 @@ export default function AccountSettingManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -544,7 +535,6 @@ export default function AccountSettingManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",

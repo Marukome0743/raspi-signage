@@ -355,7 +355,6 @@ export default function UserAccountManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -389,7 +388,6 @@ export default function UserAccountManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -423,7 +421,6 @@ export default function UserAccountManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -457,7 +454,6 @@ export default function UserAccountManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -512,7 +508,6 @@ export default function UserAccountManagementClient({
                     <Grid
                       size={8}
                       container
-                      direction="column"
                       style={{
                         minWidth: "550px",
                         display: "flex",
@@ -588,7 +583,6 @@ export default function UserAccountManagementClient({
                       <Grid
                         size={5}
                         container
-                        direction="column"
                         style={{
                           minWidth: "550px",
                           display: "flex",
@@ -633,7 +627,6 @@ export default function UserAccountManagementClient({
                           <Grid
                             size={8}
                             container
-                            direction="column"
                             style={{
                               minWidth: "550px",
                               display: "flex",
@@ -657,7 +650,6 @@ export default function UserAccountManagementClient({
                           <Grid
                             size={8}
                             container
-                            direction="column"
                             style={{
                               minWidth: "550px",
                               display: "flex",
@@ -729,7 +721,6 @@ export default function UserAccountManagementClient({
                             <Grid
                               size={8}
                               container
-                              direction="column"
                               style={{
                                 minWidth: "550px",
                                 display: "flex",
@@ -779,7 +770,6 @@ export default function UserAccountManagementClient({
                             <Grid
                               size={8}
                               container
-                              direction="column"
                               style={{
                                 minWidth: "550px",
                                 display: "flex",
@@ -846,7 +836,6 @@ export default function UserAccountManagementClient({
                             <Grid
                               size={8}
                               container
-                              direction="column"
                               style={{
                                 minWidth: "550px",
                                 display: "flex",

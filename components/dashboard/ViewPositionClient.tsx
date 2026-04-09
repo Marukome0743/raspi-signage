@@ -224,7 +224,7 @@ export default function ViewPositionClient(): React.JSX.Element {
                   <Grid
                     size={8}
                     container
-                    direction="column"
+                    sx={{ flexDirection: "column" }}
                     style={{ padding: "20px", paddingTop: "10px" }}
                   >
                     <Grid sx={formRowSx}>

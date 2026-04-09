@@ -141,7 +141,7 @@ function SortableItem({
             <Grid style={{ padding: "5px" }}>
               <Typography>ファイル名: {content.fileName}</Typography>
             </Grid>
-            <Grid container direction="column">
+            <Grid container sx={{ flexDirection: "column" }}>
               <Grid
                 style={{
                   display: "flex",

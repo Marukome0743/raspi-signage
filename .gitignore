@@ -50,7 +50,7 @@ supabase/.temp
 next-env.d.ts
 
 # Kiro settings
-.kiro
+.claude
 
 # Docs
 docs/doc_build
