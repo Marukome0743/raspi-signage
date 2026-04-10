@@ -61,15 +61,15 @@ Open <http://localhost:3000/dashboard/login> to access the dashboard.
 
 | URL | Description |
 | --- | --- |
-| `/` | サイネージ表示（`?areaId=` で指定） |
-| `/dashboard/login` | ログイン |
-| `/dashboard` | ダッシュボード（トップ） |
-| `/dashboard/manage-contents` | コンテンツ管理 |
-| `/dashboard/view-position` | 表示位置調整 |
-| `/dashboard/area-management` | エリア管理 |
-| `/dashboard/user-account-management` | ユーザーアカウント管理 |
-| `/dashboard/account-setting-management` | アカウント設定 |
-| `/dashboard/password-reset` | パスワードリセット |
+| `/` | Signage display (specify area with `?areaId=`) |
+| `/dashboard/login` | Login |
+| `/dashboard` | Dashboard (top page) |
+| `/dashboard/manage-contents` | Content management |
+| `/dashboard/view-position` | Display position adjustment |
+| `/dashboard/area-management` | Area management |
+| `/dashboard/user-account-management` | User account management |
+| `/dashboard/account-setting-management` | Account settings |
+| `/dashboard/password-reset` | Password reset |
 
 ## Stopping Supabase
 
