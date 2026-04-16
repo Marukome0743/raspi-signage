@@ -1,6 +1,19 @@
-# raspi-signage
+<div align="center">
+  <h1>robopo</h1>
 
-Digital signage system with Raspberry Pi
+  <a href="https://bun.sh/"><img src="https://img.shields.io/badge/bun-FBF0DF?labelColor=000000&logo=bun&style=for-the-badge" alt="Bun" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/docker-2496ED?labelColor=000000&logo=docker&style=for-the-badge" alt="Docker" /></a>
+  <a href="https://mui.com/"><img src="https://img.shields.io/badge/mui-007FFF?labelColor=000000&logo=mui&style=for-the-badge" alt="MUI" /></a>
+  <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/next.js-000000?labelColor=000000&logo=nextdotjs&style=for-the-badge" alt="Next.js" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-61DAFB?labelColor=000000&logo=react&style=for-the-badge" alt="React" /></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/supabase-3FCF8E?labelColor=000000&logo=supabase&style=for-the-badge" alt="Supabase" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?labelColor=000000&logo=typescript&style=for-the-badge" alt="TypeScript" /></a>
+  <a href="https://biomejs.dev/"><img src="https://img.shields.io/badge/biome-60A5FA?labelColor=000000&logo=biome&style=for-the-badge" alt="Biome" /></a>
+
+  <p>
+    Scoring and Calculation Application for Robosava
+  </p>
+</div>
 
 ## Prerequisites
 
