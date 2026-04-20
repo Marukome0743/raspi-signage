@@ -19,11 +19,11 @@ run = 'bun scripts/supabase-env.ts'
 description = "Update bun dependencies and reinstall with isolated linker"
 run = ["bun update", "bun i --linker=isolated", "mise prep"]
 
-[hooks]
-enter = ["mise i -q", "mise prep -q"]
-
-[prepare.bun]
+[deps.bun]
 auto = true
+
+[hooks]
+enter = ["mise i -q", "mise deps -q"]
 
 [settings]
 experimental = true
