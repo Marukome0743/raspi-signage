@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: raspi-signage-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: raspi
+      POSTGRES_PASSWORD: raspi
+      POSTGRES_DB: raspi_signage
+    ports:
+      - "54322:5432"
+    volumes:
+      - raspi-signage-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raspi -d raspi_signage"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: raspi-signage-rustfs
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - raspi-signage-rustfs:/data
+    command: ["/data"]
+
+volumes:
+  raspi-signage-pgdata:
+  raspi-signage-rustfs:

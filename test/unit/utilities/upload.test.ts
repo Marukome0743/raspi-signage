@@ -1,119 +1,128 @@
 import { describe, expect, mock, test } from "bun:test"
 
-interface QueryResult {
-  data: Record<string, unknown> | null
-  error: { message: string } | null
+interface State {
+  contentsRow: Record<string, unknown> | null
+  orderRow: Record<string, unknown> | null
+  uploadCalls: { prefix: string; fileName: string }[]
+  uploadError: Error | null
+  updateContentOrderCalls: unknown[]
 }
 
-const state: {
-  uploadedPath: string | null
-  uploadError: { message: string } | null
-  tableResults: Record<string, QueryResult>
-} = {
-  uploadedPath: null,
+const state: State = {
+  contentsRow: null,
+  orderRow: null,
+  uploadCalls: [],
   uploadError: null,
-  tableResults: {},
+  updateContentOrderCalls: [],
 }
 
-const createBuilder = (table: string) => {
-  const builder: Record<string, unknown> = {
-    select: () => builder,
-    update: () => builder,
-    eq: () => builder,
-    limit: () => builder,
-    single: () =>
-      Promise.resolve(state.tableResults[table] ?? { data: null, error: null }),
-  }
-  return builder
-}
+mock.module("../../../src/db/client", () => ({
+  queryOne: async (text: string) => {
+    if (text.includes("FROM contents")) {
+      return state.contentsRow
+    }
+    if (text.includes("FROM orders")) {
+      return state.orderRow
+    }
+    return null
+  },
+  query: async () => ({ rows: [] }),
+  queryRows: async () => [],
+}))
 
-mock.module("../../../src/supabase/client", () => ({
-  createClient: () => ({
-    from: (table: string) => createBuilder(table),
-    storage: {
-      from: () => ({
-        upload: (path: string) => {
-          state.uploadedPath = path
-          return Promise.resolve({ error: state.uploadError })
-        },
-        getPublicUrl: (path: string) => ({
-          data: {
-            publicUrl: `http://localhost:54321/storage/v1/object/public/signage-contents/${path}`,
-          },
-        }),
-      }),
+mock.module("../../../src/storage", () => ({
+  getStorage: () => ({
+    upload: async (
+      prefix: string,
+      fileName: string,
+      _body: unknown,
+      _ct?: string,
+    ) => {
+      state.uploadCalls.push({ prefix, fileName })
+      if (state.uploadError) {
+        throw state.uploadError
+      }
+      return {
+        key: `${prefix}/${fileName}`,
+        url: `http://localhost:9000/signage-contents/${prefix}/${fileName}`,
+      }
     },
+    list: async () => [],
   }),
 }))
 
 mock.module("../../../src/services/contents", () => ({
-  updateContentOrder: mock(() => Promise.resolve()),
+  updateContentOrder: async (
+    docId: string,
+    content: Record<string, unknown>,
+  ) => {
+    state.updateContentOrderCalls.push([docId, content])
+  },
 }))
 
 const { postContent } = await import("../../../src/services/upload")
-const { updateContentOrder } = (await import(
-  "../../../src/services/contents"
-)) as {
-  updateContentOrder: ReturnType<typeof mock> &
-    ((...args: unknown[]) => Promise<void>)
+
+function reset() {
+  state.contentsRow = null
+  state.orderRow = null
+  state.uploadCalls = []
+  state.uploadError = null
+  state.updateContentOrderCalls = []
 }
 
 describe("postContent", () => {
   test("returns early when content has no name", async () => {
-    ;(updateContentOrder as ReturnType<typeof mock>).mockClear()
+    reset()
     await postContent("doc-1", {} as File, "image", 0)
-    expect(updateContentOrder).not.toHaveBeenCalled()
+    expect(state.updateContentOrderCalls).toHaveLength(0)
+    expect(state.uploadCalls).toHaveLength(0)
   })
 
   test("returns early when contents not found", async () => {
-    state.tableResults = {}
-    ;(updateContentOrder as ReturnType<typeof mock>).mockClear()
+    reset()
+    state.contentsRow = null
     await postContent("doc-1", { name: "test.png" } as File, "image", 0)
-    expect(updateContentOrder).not.toHaveBeenCalled()
+    expect(state.updateContentOrderCalls).toHaveLength(0)
   })
 
   test("returns early on upload error", async () => {
-    state.tableResults = {
-      contents: { data: { area_id: "0" }, error: null },
-    }
-    state.uploadError = { message: "fail" }
-    ;(updateContentOrder as ReturnType<typeof mock>).mockClear()
+    reset()
+    state.contentsRow = { area_id: "0" }
+    state.uploadError = new Error("fail")
     await postContent("doc-1", { name: "test.png" } as File, "image", 0)
-    expect(updateContentOrder).not.toHaveBeenCalled()
+    expect(state.updateContentOrderCalls).toHaveLength(0)
   })
 
   test("uploads file and appends to hidden", async () => {
-    state.uploadError = null
-    state.tableResults = {
-      contents: { data: { area_id: "0" }, error: null },
-      orders: { data: { hidden: [{ fileName: "old.png" }] }, error: null },
-    }
-    ;(updateContentOrder as ReturnType<typeof mock>).mockClear()
+    reset()
+    state.contentsRow = { area_id: "0" }
+    state.orderRow = { hidden: [{ fileName: "old.png" }] }
     await postContent("doc-1", { name: "new.png" } as File, "image", 5000)
-    expect(state.uploadedPath).toBe("0/new.png")
-    expect(updateContentOrder).toHaveBeenCalledWith("doc-1", {
-      hidden: [
-        { fileName: "old.png" },
-        {
-          fileName: "new.png",
-          path: "http://localhost:54321/storage/v1/object/public/signage-contents/0/new.png",
-          type: "image",
-          viewTime: 5000,
-        },
-      ],
+    expect(state.uploadCalls).toEqual([{ prefix: "0", fileName: "new.png" }])
+    expect(state.updateContentOrderCalls).toHaveLength(1)
+    const [docId, content] = state.updateContentOrderCalls[0] as [
+      string,
+      { hidden: Record<string, unknown>[] },
+    ]
+    expect(docId).toBe("doc-1")
+    expect(content.hidden).toHaveLength(2)
+    expect(content.hidden[1]).toEqual({
+      fileName: "new.png",
+      path: "http://localhost:9000/signage-contents/0/new.png",
+      type: "image",
+      viewTime: 5000,
     })
   })
 
   test("uses default viewTime of 2000 when duration is 0", async () => {
-    state.uploadError = null
-    state.tableResults = {
-      contents: { data: { area_id: "1" }, error: null },
-      orders: { data: { hidden: [] }, error: null },
-    }
-    ;(updateContentOrder as ReturnType<typeof mock>).mockClear()
+    reset()
+    state.contentsRow = { area_id: "1" }
+    state.orderRow = { hidden: [] }
     await postContent("doc-1", { name: "vid.mp4" } as File, "video", 0)
-    const calls = (updateContentOrder as ReturnType<typeof mock>).mock.calls
-    const call = calls[0] as [string, { hidden: { viewTime: number }[] }]
-    expect(call[1].hidden[0].viewTime).toBe(2000)
+    const [, content] = state.updateContentOrderCalls[0] as [
+      string,
+      { hidden: { viewTime: number }[] },
+    ]
+    expect(content.hidden[0].viewTime).toBe(2000)
   })
 })

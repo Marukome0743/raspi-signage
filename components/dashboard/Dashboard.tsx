@@ -36,10 +36,10 @@ import Toolbar from "@mui/material/Toolbar"
 import Typography from "@mui/material/Typography"
 import { usePathname, useRouter } from "next/navigation"
 import * as React from "react"
+import { signOut } from "@/src/auth/client"
 import { useColorMode } from "@/src/ColorModeContext"
+import type { ContentListItem, UserInfo } from "@/src/db/types"
 import { getContentList } from "@/src/services/contents"
-import { createClient } from "@/src/supabase/client"
-import type { ContentListItem, UserInfo } from "@/src/supabase/database.types"
 import { OrderProvider, useOrderContext } from "./OrderContext"
 
 interface DashboardProps {
@@ -246,15 +246,12 @@ function DashboardContent({ children, userInfo }: DashboardProps) {
 
   const onClickLogout = async () => {
     setName("")
-    const supabase = createClient()
-    await supabase.auth
-      .signOut()
-      .then(() => {
-        window.location.href = "/dashboard/login"
-      })
-      .catch(() => {
-        alert("ログアウトに失敗しました")
-      })
+    try {
+      await signOut()
+      window.location.href = "/dashboard/login"
+    } catch {
+      alert("ログアウトに失敗しました")
+    }
   }
 
   const drawerContent = (

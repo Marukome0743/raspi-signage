@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import * as fc from "fast-check"
-import type { Content, ContentListItem } from "@/src/supabase/database.types"
+import type { Content, ContentListItem } from "@/src/db/types"
 
 // Inline the pure function to avoid importing supabase-dependent module
 function mapContentToListItem(content: Content): ContentListItem {

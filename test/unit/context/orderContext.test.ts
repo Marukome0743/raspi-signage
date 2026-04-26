@@ -5,7 +5,7 @@ import {
   OrderProvider,
   useOrderContext,
 } from "@/components/dashboard/OrderContext"
-import type { OrderContextValue } from "@/src/supabase/database.types"
+import type { OrderContextValue } from "@/src/db/types"
 
 describe("OrderContext minimal responsibility", () => {
   test("context value contains only orderId, setOrderId, progress, setProgress (Requirement 4.1, 4.5)", () => {
@@ -21,7 +21,9 @@ describe("OrderContext minimal responsibility", () => {
     )
 
     expect(capturedContext).not.toBeNull()
-    const keys = Object.keys(capturedContext as OrderContextValue).sort()
+    const keys = Object.keys(
+      capturedContext as unknown as OrderContextValue,
+    ).sort()
     expect(keys).toEqual(["orderId", "progress", "setOrderId", "setProgress"])
   })
 
@@ -38,7 +40,7 @@ describe("OrderContext minimal responsibility", () => {
     )
 
     expect(capturedContext).not.toBeNull()
-    expect((capturedContext as OrderContextValue).orderId).toBeNull()
+    expect((capturedContext as unknown as OrderContextValue).orderId).toBeNull()
   })
 
   test("progress initial value is false (Requirement 4.1)", () => {
@@ -54,7 +56,9 @@ describe("OrderContext minimal responsibility", () => {
     )
 
     expect(capturedContext).not.toBeNull()
-    expect((capturedContext as OrderContextValue).progress).toBe(false)
+    expect((capturedContext as unknown as OrderContextValue).progress).toBe(
+      false,
+    )
   })
 
   test("user info fields are not included in context (Requirement 4.2)", () => {
@@ -70,7 +74,7 @@ describe("OrderContext minimal responsibility", () => {
     )
 
     expect(capturedContext).not.toBeNull()
-    const ctx = capturedContext as Record<string, unknown>
+    const ctx = capturedContext as unknown as Record<string, unknown>
     expect(ctx).not.toHaveProperty("currentUser")
     expect(ctx).not.toHaveProperty("uid")
     expect(ctx).not.toHaveProperty("userName")

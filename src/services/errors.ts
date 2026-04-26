@@ -1,20 +1,20 @@
-export class SupabaseQueryError extends Error {
+export class DataAccessError extends Error {
   constructor(
     message: string,
-    public readonly code: string | null,
-    public readonly details: string | null,
+    public readonly code: string | null = null,
+    public readonly details: string | null = null,
   ) {
     super(message)
-    this.name = "SupabaseQueryError"
+    this.name = "DataAccessError"
   }
 }
 
-export function handleSupabaseError(error: {
+export function handleDataError(error: {
   message: string
   code?: string
   details?: string
 }): never {
-  throw new SupabaseQueryError(
+  throw new DataAccessError(
     error.message,
     error.code ?? null,
     error.details ?? null,

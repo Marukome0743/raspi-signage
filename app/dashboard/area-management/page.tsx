@@ -1,6 +1,6 @@
 import AreaManagementClient from "@/components/dashboard/AreaManagementClient"
+import type { Content } from "@/src/db/types"
 import { getContentsDataServer } from "@/src/services/contents-server"
-import type { Content } from "@/src/supabase/database.types"
 
 export default async function AreaManagementPage() {
   let initialData: Content[] | null = null

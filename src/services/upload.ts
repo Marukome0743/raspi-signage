@@ -1,58 +1,59 @@
-import { createClient } from "@/src/supabase/client"
-import type { ContentItem } from "@/src/supabase/database.types"
+"use server"
+
+import { queryOne } from "@/src/db/client"
+import type { ContentItem, Order } from "@/src/db/types"
+import { getStorage } from "@/src/storage"
 import { updateContentOrder } from "./contents"
 
-const BUCKET = "signage-contents"
-
-// Upload content to Supabase storage
-export const postContent = async (
+// Upload content (image / video) and append it to the order's hidden list.
+// Storage backend is Vercel Blob in production and S3-compatible (RustFS)
+// for local development.
+export async function postContent(
   docId: string,
   content: File,
   type: ContentItem["type"],
   duration: number,
-): Promise<void> => {
-  const supabase = createClient()
+): Promise<void> {
   if (!content.name) {
     return
   }
 
-  const { data: contentsData } = await supabase
-    .from("contents")
-    .select()
-    .eq("deleted", false)
-    .eq("order_id", docId)
-    .limit(1)
-    .single()
-  if (!contentsData) {
+  const contentsRow = await queryOne<{ area_id: string }>(
+    `SELECT area_id
+       FROM contents
+      WHERE deleted = false AND order_id = $1
+      LIMIT 1`,
+    [docId],
+  )
+  if (!contentsRow) {
     return
   }
 
-  const areaId = contentsData.area_id
-  const filePath = `${areaId}/${content.name}`
-
-  const { error } = await supabase.storage
-    .from(BUCKET)
-    .upload(filePath, content, { upsert: true })
-  if (error) {
-    console.log("Upload error:", error)
+  const areaId = contentsRow.area_id
+  let publicUrl: string
+  try {
+    const storage = getStorage()
+    const result = await storage.upload(
+      areaId,
+      content.name,
+      content,
+      content.type || undefined,
+    )
+    publicUrl = result.url
+  } catch (e) {
+    console.log("Upload error:", e)
     return
   }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(BUCKET).getPublicUrl(filePath)
 
   let viewTime = 2000
   if (duration !== 0) {
     viewTime = duration
   }
 
-  // Get current order to append to hidden
-  const { data: order } = await supabase
-    .from("orders")
-    .select()
-    .eq("id", docId)
-    .single()
+  const order = await queryOne<Order>(
+    `SELECT id, set1, hidden FROM orders WHERE id = $1`,
+    [docId],
+  )
 
   const currentHidden = order?.hidden ?? []
   await updateContentOrder(docId, {

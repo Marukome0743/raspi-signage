@@ -1,17 +1,24 @@
-import { handleSupabaseError } from "@/src/services/errors"
-import { createClient } from "@/src/supabase/client"
-import type { UserAccount } from "@/src/supabase/database.types"
+"use server"
 
-export const getUserAccountList = async (): Promise<UserAccount[]> => {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from("users")
-    .select()
-    .eq("deleted", false)
-  if (error) {
-    handleSupabaseError(error)
+import { queryRows } from "@/src/db/client"
+import type { User, UserAccount } from "@/src/db/types"
+import { handleDataError } from "@/src/services/errors"
+
+export async function getUserAccountList(): Promise<UserAccount[]> {
+  let rows: User[]
+  try {
+    rows = await queryRows<User>(
+      `SELECT id, email, name AS user_name, management, coverage_area, pass_flg, deleted
+         FROM "user"
+        WHERE deleted = false`,
+    )
+  } catch (e) {
+    handleDataError({
+      message:
+        e instanceof Error ? e.message : "ユーザー一覧取得に失敗しました",
+    })
   }
-  return (data ?? []).map((user) => ({
+  return rows.map((user) => ({
     uid: user.id,
     email: user.email,
     userName: user.user_name,

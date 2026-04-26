@@ -38,12 +38,9 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
-import {
-  filterActiveDisplayItems,
-  getOrderById,
-  setContentOrder,
-} from "@/src/services/contents"
-import type { ContentItem, Order } from "@/src/supabase/database.types"
+import type { ContentItem, Order } from "@/src/db/types"
+import { filterActiveDisplayItems } from "@/src/services/content-helpers"
+import { getOrderById, setContentOrder } from "@/src/services/contents"
 
 interface DisplayContentItem extends ContentItem {
   delete?: boolean

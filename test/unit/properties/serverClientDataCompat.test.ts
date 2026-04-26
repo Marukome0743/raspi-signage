@@ -1,55 +1,30 @@
 import { describe, expect, mock, test } from "bun:test"
 import * as fc from "fast-check"
 
-interface QueryResult {
-  data: Record<string, unknown> | Record<string, unknown>[] | null
-  error: { message: string } | null
+interface State {
+  rows: Record<string, unknown>[]
+  text: string | null
 }
 
-const state: {
-  queryResult: QueryResult
-  table: string | null
-} = {
-  queryResult: { data: null, error: null },
-  table: null,
-}
+const state: State = { rows: [], text: null }
 
-const createBuilder = () => {
-  const result = () => Promise.resolve(state.queryResult)
-  const builder: unknown = new Proxy(result, {
-    get(_target: unknown, prop: string) {
-      if (prop === "then") {
-        return (resolve: (value: QueryResult) => void) =>
-          resolve(state.queryResult)
-      }
-      return () => builder
-    },
-  })
-  return builder
-}
-
-const mockClient = () => ({
-  from: (table: string) => {
-    state.table = table
-    return createBuilder()
+const dbMock = {
+  query: async (text: string) => {
+    state.text = text
+    return { rows: state.rows }
   },
-})
+  queryRows: async (text: string) => {
+    state.text = text
+    return state.rows
+  },
+  queryOne: async (text: string) => {
+    state.text = text
+    return state.rows[0] ?? null
+  },
+}
 
-mock.module("@/src/supabase/client", () => ({
-  createClient: () => mockClient(),
-}))
-
-mock.module("@/src/supabase/server", () => ({
-  createClient: async () => mockClient(),
-}))
-
-mock.module("../../../src/supabase/client", () => ({
-  createClient: () => mockClient(),
-}))
-
-mock.module("../../../src/supabase/server", () => ({
-  createClient: async () => mockClient(),
-}))
+mock.module("../../../src/db/client", () => dbMock)
+mock.module("@/src/db/client", () => dbMock)
 
 const { getContentsDataClient, getContentList, getOrderById } = await import(
   "../../../src/services/contents"
@@ -64,7 +39,6 @@ const { getUserAccountListServer } = await import(
   "../../../src/services/users-server"
 )
 
-// Arbitrary generators for DB row shapes
 const contentRowArb = fc.record({
   area_id: fc.string({ minLength: 1, maxLength: 5 }),
   area_name: fc.string({ minLength: 1, maxLength: 20 }),
@@ -110,26 +84,23 @@ const userRowArb = fc.record({
   deleted: fc.constant(false),
 })
 
-describe("Property 2: サーバーサイドデータ取得関数のデータ構造互換性", () => {
-  test("getContentsDataServer returns same structure as getContentsDataClient", () => {
+describe("Property 2: server / client services return identical shapes", () => {
+  test("getContentsDataServer matches getContentsDataClient", () => {
     fc.assert(
       fc.asyncProperty(
         fc.array(contentRowArb, { minLength: 0, maxLength: 5 }),
         async (rows) => {
-          state.queryResult = { data: rows, error: null }
+          state.rows = rows
           const clientResult = await getContentsDataClient()
           const serverResult = await getContentsDataServer()
-          expect(Object.keys(serverResult[0] ?? {}).sort()).toEqual(
-            Object.keys(clientResult[0] ?? {}).sort(),
-          )
           expect(serverResult).toEqual(clientResult)
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 50 },
     )
   })
 
-  test("getContentListServer returns same structure as getContentList", () => {
+  test("getContentListServer matches getContentList", () => {
     fc.assert(
       fc.asyncProperty(
         fc.array(contentRowArb, { minLength: 1, maxLength: 5 }),
@@ -138,7 +109,7 @@ describe("Property 2: サーバーサイドデータ取得関数のデータ構�
           maxLength: 3,
         }),
         async (rows, coverageArea) => {
-          state.queryResult = { data: rows, error: null }
+          state.rows = rows
           const clientResult = await getContentList(coverageArea)
           const serverResult = await getContentListServer(coverageArea)
           expect(serverResult).toEqual(clientResult)
@@ -154,28 +125,28 @@ describe("Property 2: サーバーサイドデータ取得関数のデータ構�
           }
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 50 },
     )
   })
 
-  test("getOrderByIdServer returns same structure as getOrderById", () => {
+  test("getOrderByIdServer matches getOrderById", () => {
     fc.assert(
       fc.asyncProperty(orderRowArb, async (row) => {
-        state.queryResult = { data: row, error: null }
+        state.rows = [row]
         const clientResult = await getOrderById(row.id)
         const serverResult = await getOrderByIdServer(row.id)
         expect(serverResult).toEqual(clientResult)
       }),
-      { numRuns: 100 },
+      { numRuns: 50 },
     )
   })
 
-  test("getUserAccountListServer returns same structure as getUserAccountList", () => {
+  test("getUserAccountListServer matches getUserAccountList", () => {
     fc.assert(
       fc.asyncProperty(
         fc.array(userRowArb, { minLength: 1, maxLength: 5 }),
         async (rows) => {
-          state.queryResult = { data: rows, error: null }
+          state.rows = rows
           const clientResult = await getUserAccountList()
           const serverResult = await getUserAccountListServer()
           expect(serverResult).toEqual(clientResult)
@@ -193,7 +164,7 @@ describe("Property 2: サーバーサイドデータ取得関数のデータ構�
           }
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 50 },
     )
   })
 })

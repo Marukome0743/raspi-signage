@@ -15,6 +15,7 @@ import type React from "react"
 import { useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
+import { signIn } from "@/src/auth/client"
 import { getAccountLoginData } from "@/src/services/auth"
 
 interface SnackbarStatus {
@@ -63,7 +64,11 @@ export default function LoginPage(): React.JSX.Element {
     }
     setProgress(true) // Show spinner
     try {
-      const user = await getAccountLoginData(email, password)
+      const result = await signIn.email({ email, password })
+      if (result.error || !result.data?.user) {
+        throw new Error(result.error?.message ?? "ログインに失敗しました")
+      }
+      const user = await getAccountLoginData(result.data.user.id)
       if (user != null) {
         if (user.passFlg) {
           window.location.href = "/dashboard/password-reset"

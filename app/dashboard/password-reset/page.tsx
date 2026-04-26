@@ -13,10 +13,10 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
+import { changePassword, getSession, signOut } from "@/src/auth/client"
+import type { AccountData } from "@/src/db/types"
 import { resetPassword } from "@/src/services/accounts"
 import { checkAccountPassKey, getAccountDataClient } from "@/src/services/auth"
-import { createClient } from "@/src/supabase/client"
-import type { AccountData } from "@/src/supabase/database.types"
 
 export default function PasswordResetPage(): React.JSX.Element {
   const [user, setUser] = useState<AccountData | null>(null)
@@ -35,10 +35,8 @@ export default function PasswordResetPage(): React.JSX.Element {
 
   useEffect(() => {
     async function fetchUid() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const session = await getSession()
+      const user = session.data?.user
       if (!user) {
         router.push("/dashboard/login")
         return
@@ -78,9 +76,17 @@ export default function PasswordResetPage(): React.JSX.Element {
       }
       const check = await checkAccountPassKey(user.email)
       if (check != null) {
+        const change = await changePassword({
+          currentPassword: nowPassword,
+          newPassword,
+        })
+        if (change.error) {
+          throw new Error(
+            change.error.message ?? "パスワード変更に失敗しました",
+          )
+        }
         await resetPassword(uid as string, user.email, nowPassword, newPassword)
-        const supabase = createClient()
-        await supabase.auth.signOut()
+        await signOut()
         setProgress(false)
         router.push("/dashboard/login")
       }

@@ -1,11 +1,8 @@
 import UserAccountManagementClient from "@/components/dashboard/UserAccountManagementClient"
-import { mapContentToListItem } from "@/src/services/contents"
+import type { ContentListItem, UserAccount } from "@/src/db/types"
+import { mapContentToListItem } from "@/src/services/content-helpers"
 import { getContentsDataServer } from "@/src/services/contents-server"
 import { getUserAccountListServer } from "@/src/services/users-server"
-import type {
-  ContentListItem,
-  UserAccount,
-} from "@/src/supabase/database.types"
 
 export default async function UserAccountManagementPage() {
   let initialUserList: UserAccount[] | null = null

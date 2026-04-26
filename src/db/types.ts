@@ -1,4 +1,7 @@
-// src/supabase/database.types.ts
+// src/db/types.ts
+// Domain types for the raspi-signage project.
+// These types are independent of the underlying storage technology
+// (Neon Postgres in production, plain Postgres locally).
 
 export type ContentItem = {
   fileName: string
@@ -43,41 +46,6 @@ export type User = {
   deleted: boolean
 }
 
-// Supabase Database型（for generics）
-export interface Database {
-  public: {
-    Tables: {
-      orders: {
-        Row: Order
-        Insert: Partial<Order>
-        Update: Partial<Order>
-        Relationships: []
-      }
-      contents: {
-        Row: Content
-        Insert: Partial<Content>
-        Update: Partial<Content>
-        Relationships: []
-      }
-      pixel_sizes: {
-        Row: PixelSize
-        Insert: Omit<PixelSize, "id">
-        Update: Partial<PixelSize>
-        Relationships: []
-      }
-      users: {
-        Row: User
-        Insert: User
-        Update: Partial<User>
-        Relationships: []
-      }
-    }
-    Views: Record<string, never>
-    Functions: Record<string, never>
-    Enums: Record<string, never>
-  }
-}
-
 // Utility function return types
 
 export interface PixelSizeInfo {
@@ -120,7 +88,6 @@ export interface ContentListItem {
   delete: boolean
 }
 
-// UserInfo type definition (server-side user data passed via props)
 export interface UserInfo {
   uid: string
   userName: string
@@ -128,7 +95,6 @@ export interface UserInfo {
   coverageArea: string[]
 }
 
-// OrderContext type definitions
 export interface OrderContextValue {
   orderId: string | null
   setOrderId: (id: string | null) => void

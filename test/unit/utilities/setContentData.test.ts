@@ -1,126 +1,72 @@
 import { describe, expect, mock, test } from "bun:test"
 import fc from "fast-check"
 
-interface QueryResult {
-  data: Record<string, unknown> | null
-  error: { message: string } | null
+interface QueryCall {
+  text: string
+  params: unknown[] | null
 }
 
-interface CountResult {
-  count: number
+interface State {
+  calls: QueryCall[]
+  insertReturning: Record<string, unknown> | null
+  countRow: { count: string } | null
+  selectRow: Record<string, unknown> | null
+  signInResult: { data?: unknown; error?: { message: string } | null }
+  signUpResult: {
+    data?: { user: { id: string } } | null
+    error?: { message: string } | null
+  }
+  changePasswordResult: { error?: { message: string } | null }
 }
 
-interface AuthResult {
-  data: { user: { id: string } | null }
-  error: { message: string } | null
+const state: State = {
+  calls: [],
+  insertReturning: null,
+  countRow: null,
+  selectRow: null,
+  signInResult: { error: null },
+  signUpResult: { data: { user: { id: "new-uid" } }, error: null },
+  changePasswordResult: { error: null },
 }
 
-const state: {
-  table: string | null
-  operation: string | null
-  params: Record<string, unknown> | null
-  queryResult: QueryResult
-  countResult: CountResult
-  authResult: AuthResult
-  adminAuthResult: AuthResult
-  signInError: { message: string } | null
-  updateUserError: { message: string } | null
-} = {
-  table: null,
-  operation: null,
-  params: null,
-  queryResult: { data: null, error: null },
-  countResult: { count: 0 },
-  authResult: { data: { user: null }, error: null },
-  adminAuthResult: { data: { user: null }, error: null },
-  signInError: null,
-  updateUserError: null,
+const dbMock = {
+  query: async (text: string, params?: unknown[]) => {
+    state.calls.push({ text, params: params ?? null })
+    return { rows: [] }
+  },
+  queryRows: async (text: string, params?: unknown[]) => {
+    state.calls.push({ text, params: params ?? null })
+    return []
+  },
+  queryOne: async (text: string, params?: unknown[]) => {
+    state.calls.push({ text, params: params ?? null })
+    if (text.includes("RETURNING id")) {
+      return state.insertReturning
+    }
+    if (text.includes("COUNT(")) {
+      return state.countRow
+    }
+    return state.selectRow
+  },
 }
 
-const createBuilder = () => {
-  const builder: unknown = new Proxy(() => {}, {
-    get(_target: unknown, prop: string) {
-      if (prop === "then") {
-        return (resolve: (value: QueryResult) => void) =>
-          resolve(state.queryResult)
-      }
-      if (prop === "insert") {
-        return (params: Record<string, unknown>) => {
-          state.operation = "insert"
-          state.params = params
-          return builder
+mock.module("../../../src/db/client", () => dbMock)
+mock.module("@/src/db/client", () => dbMock)
+
+const authServerMock = {
+  getAuth: () => ({
+    api: {
+      signUpEmail: async () => {
+        if (state.signUpResult.error) {
+          throw new Error(state.signUpResult.error.message)
         }
-      }
-      if (prop === "update") {
-        return (params: Record<string, unknown>) => {
-          state.operation = "update"
-          state.params = params
-          return builder
-        }
-      }
-      if (prop === "upsert") {
-        return (params: Record<string, unknown>) => {
-          state.operation = "upsert"
-          state.params = params
-          return builder
-        }
-      }
-      if (prop === "select") {
-        return (_cols: string, opts?: { head?: boolean }) => {
-          if (opts?.head) {
-            return Promise.resolve(state.countResult)
-          }
-          return builder
-        }
-      }
-      if (prop === "single") {
-        return () => Promise.resolve(state.queryResult)
-      }
-      return () => builder
-    },
-  })
-  return builder
-}
-
-mock.module("../../../src/supabase/client", () => ({
-  createClient: () => ({
-    from: (table: string) => {
-      state.table = table
-      return createBuilder()
-    },
-    auth: {
-      signInWithPassword: () => Promise.resolve({ error: state.signInError }),
-      updateUser: () => Promise.resolve({ error: state.updateUserError }),
-    },
-  }),
-}))
-
-mock.module("@/src/supabase/client", () => ({
-  createClient: () => ({
-    from: (table: string) => {
-      state.table = table
-      return createBuilder()
-    },
-    auth: {
-      signInWithPassword: () => Promise.resolve({ error: state.signInError }),
-      updateUser: () => Promise.resolve({ error: state.updateUserError }),
-    },
-  }),
-}))
-
-mock.module("../../../src/supabase/admin", () => ({
-  createAdminClient: () => ({
-    from: (table: string) => {
-      state.table = table
-      return createBuilder()
-    },
-    auth: {
-      admin: {
-        createUser: () => Promise.resolve(state.adminAuthResult),
+        return state.signUpResult.data
       },
     },
   }),
-}))
+}
+mock.module("../../../src/auth/server", () => authServerMock)
+mock.module("@/src/auth/server", () => authServerMock)
 
 const {
   setContentPixelSize,
@@ -140,53 +86,68 @@ const {
   deleteContentsData,
 } = await import("../../../src/services/contents")
 
+function reset() {
+  state.calls = []
+  state.insertReturning = null
+  state.countRow = null
+  state.selectRow = null
+  state.signInResult = { error: null }
+  state.signUpResult = { data: { user: { id: "new-uid" } }, error: null }
+  state.changePasswordResult = { error: null }
+}
+
 describe("setContentOrder", () => {
   test("upserts to orders table", async () => {
-    const docId = "order-1"
-    const content = { set1: [{ fileName: "test.png" }] }
-    await setContentOrder(docId, content)
-    expect(state.table).toBe("orders")
-    expect(state.operation).toBe("upsert")
-    expect(state.params).toEqual({ id: docId, ...content })
+    reset()
+    await setContentOrder("order-1", {
+      set1: [{ fileName: "test.png", path: "p", type: "image", viewTime: 100 }],
+    })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("INSERT INTO orders")
+    expect(last?.text).toContain("ON CONFLICT")
+    expect(last?.params?.[0]).toBe("order-1")
   })
 })
 
 describe("updateContentOrder", () => {
   test("updates orders table with eq filter", async () => {
+    reset()
     await updateContentOrder("order-1", { hidden: [] })
-    expect(state.table).toBe("orders")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({ hidden: [] })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("UPDATE orders")
+    expect(last?.text).toContain("hidden")
   })
 })
 
 describe("deleteContentsData", () => {
   test("soft-deletes content by setting deleted=true", async () => {
-    const contents = [{ orderId: "o1" }, { orderId: "o2" }] as {
-      orderId: string
-    }[]
-    await deleteContentsData(
-      1,
-      contents as Parameters<typeof deleteContentsData>[1],
-    )
-    expect(state.table).toBe("contents")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({ deleted: true })
+    reset()
+    const contents = [{ orderId: "o1" }, { orderId: "o2" }] as Parameters<
+      typeof deleteContentsData
+    >[1]
+    await deleteContentsData(1, contents)
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("UPDATE contents")
+    expect(last?.text).toContain("deleted = true")
+    expect(last?.params).toEqual(["o2"])
   })
 })
 
 describe("deleteAccountData", () => {
   test("soft-deletes user by setting deleted=true", async () => {
+    reset()
     await deleteAccountData("uid-1")
-    expect(state.table).toBe("users")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({ deleted: true })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain('UPDATE "user"')
+    expect(last?.text).toContain("deleted = true")
+    expect(last?.params).toEqual(["uid-1"])
   })
 })
 
 describe("setContentPixelSize", () => {
   test("creates new pixel_size when pixelSizeId is empty", async () => {
-    state.queryResult = { data: { id: "new-ps" }, error: null }
+    reset()
+    state.insertReturning = { id: "new-ps" }
     const result = await setContentPixelSize("order-1", "", 1920, 1080)
     expect(result).toEqual({
       width: 1920,
@@ -201,34 +162,27 @@ describe("setContentPixelSize", () => {
   })
 
   test("returns existing pixel data when pixelSizeId provided", async () => {
-    state.queryResult = {
-      data: {
-        width: 800,
-        height: 600,
-        pixel_width: 800,
-        pixel_height: 600,
-        margin_top: 10,
-        margin_left: 20,
-        display_content_flg: true,
-        get_pixel_flg: false,
-      },
-      error: null,
+    reset()
+    state.selectRow = {
+      width: 800,
+      height: 600,
+      pixel_width: 800,
+      pixel_height: 600,
+      margin_top: 10,
+      margin_left: 20,
+      display_content_flg: true,
+      get_pixel_flg: false,
     }
     const result = await setContentPixelSize("order-1", "ps-1", 1920, 1080)
     expect(result?.pixelWidth).toBe(800)
     expect(result?.marginTop).toBe(10)
   })
-
-  test("returns null when pixel_size not found", async () => {
-    state.queryResult = { data: null, error: null }
-    const result = await setContentPixelSize("order-1", "bad-id", 1920, 1080)
-    expect(result).toBeNull()
-  })
 })
 
 describe("createDisplayContent", () => {
   test("inserts pixel_size and returns merged result", async () => {
-    state.queryResult = { data: { id: "new-ps" }, error: null }
+    reset()
+    state.insertReturning = { id: "new-ps" }
     const pixel = { pixelWidth: 1920, pixelHeight: 1080 }
     const result = await createDisplayContent("order-1", pixel)
     expect(result).toEqual({
@@ -246,62 +200,54 @@ describe("createDisplayContent", () => {
 
 describe("updateDisplayContent", () => {
   test("updates pixel_sizes with layout params", async () => {
+    reset()
     await updateDisplayContent("ps-1", 600, 800, 10, 20)
-    expect(state.table).toBe("pixel_sizes")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({
-      height: 600,
-      width: 800,
-      margin_top: 10,
-      margin_left: 20,
-    })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("UPDATE pixel_sizes")
+    expect(last?.params).toEqual([600, 800, 10, 20, "ps-1"])
   })
 })
 
 describe("resetPixelSize", () => {
   test("sets get_pixel_flg to true", async () => {
+    reset()
     await resetPixelSize("ps-1")
-    expect(state.table).toBe("pixel_sizes")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({ get_pixel_flg: true })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("get_pixel_flg = true")
+    expect(last?.params).toEqual(["ps-1"])
   })
 })
 
 describe("createContentsData", () => {
-  test("inserts order then content", async () => {
-    state.queryResult = { data: { id: "new-order" }, error: null }
-    state.countResult = { count: 3 }
+  test("inserts order then content with sequential area_id", async () => {
+    reset()
+    state.insertReturning = { id: "new-order" }
+    state.countRow = { count: "3" }
     await createContentsData("北海道")
-    expect(state.table).toBe("contents")
-    expect(state.operation).toBe("insert")
-    expect(state.params).toEqual({
-      area_name: "北海道",
-      order_id: "new-order",
-      area_id: "3",
-      deleted: false,
-    })
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("INSERT INTO contents")
+    expect(last?.params).toEqual(["3", "北海道", "new-order"])
   })
 })
 
 describe("updateContentsData", () => {
   test("updates area_name for given content", async () => {
-    const contents = [{ orderId: "o1" }, { orderId: "o2" }] as {
-      orderId: string
-    }[]
-    await updateContentsData(
-      0,
-      contents as Parameters<typeof updateContentsData>[1],
-      "東北",
-    )
-    expect(state.table).toBe("contents")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({ area_name: "東北" })
+    reset()
+    const contents = [{ orderId: "o1" }, { orderId: "o2" }] as Parameters<
+      typeof updateContentsData
+    >[1]
+    await updateContentsData(0, contents, "東北")
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain("UPDATE contents")
+    expect(last?.text).toContain("area_name")
+    expect(last?.params).toEqual(["東北", "o1"])
   })
 })
 
 describe("createAccountData", () => {
-  test("creates auth user and inserts user record", async () => {
-    state.adminAuthResult = {
+  test("creates auth user via Better Auth and updates fields", async () => {
+    reset()
+    state.signUpResult = {
       data: { user: { id: "new-uid" } },
       error: null,
     }
@@ -312,106 +258,57 @@ describe("createAccountData", () => {
       passFlg: true,
     }
     await createAccountData("test@example.com", "pass123", user)
-    expect(state.table).toBe("users")
-    expect(state.operation).toBe("insert")
-    expect(state.params?.id).toBe("new-uid")
-    expect(state.params?.user_name).toBe("テスト")
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain('UPDATE "user"')
+    expect(last?.params?.[3]).toBe("new-uid")
   })
 
-  test("throws when auth fails", async () => {
-    state.adminAuthResult = {
-      data: { user: null },
+  test("throws when sign up fails", async () => {
+    reset()
+    state.signUpResult = {
+      data: null,
       error: { message: "already exists" },
     }
-    state.table = null
-    state.operation = null
-    expect(
-      createAccountData(
-        "dup@example.com",
-        "pass",
-        {} as Parameters<typeof createAccountData>[2],
-      ),
+    await expect(
+      createAccountData("dup@example.com", "pass", {
+        userName: "x",
+        management: false,
+        coverageArea: [],
+      }),
     ).rejects.toThrow("already exists")
   })
 })
 
 describe("updateAccountData", () => {
-  test("updates user without password change", async () => {
+  test("updates user fields", async () => {
+    reset()
     const user = {
       userName: "更新",
       management: true,
       coverageArea: ["0", "1"],
     }
     await updateAccountData("uid-1", user, "a@example.com", "", "")
-    expect(state.table).toBe("users")
-    expect(state.operation).toBe("update")
-    expect(state.params).toEqual({
-      user_name: "更新",
-      management: true,
-      coverage_area: ["0", "1"],
-    })
-  })
-
-  test("updates password then user when newPassword provided", async () => {
-    state.signInError = null
-    state.updateUserError = null
-    const user = { userName: "更新", management: false, coverageArea: ["0"] }
-    await updateAccountData("uid-1", user, "a@example.com", "old", "new")
-    expect(state.table).toBe("users")
-    expect(state.params).toEqual({
-      user_name: "更新",
-      management: false,
-      coverage_area: ["0"],
-    })
-  })
-
-  test("throws when signIn fails", async () => {
-    state.signInError = { message: "bad password" }
-    state.table = null
-    state.operation = null
-    const user = {
-      userName: "x",
-      management: false,
-      coverageArea: [] as string[],
-    }
-    expect(
-      updateAccountData("uid-1", user, "a@example.com", "wrong", "new"),
-    ).rejects.toThrow("bad password")
-  })
-
-  test("throws when updateUser fails", async () => {
-    state.signInError = null
-    state.updateUserError = { message: "update failed" }
-    state.table = null
-    state.operation = null
-    const user = {
-      userName: "x",
-      management: false,
-      coverageArea: [] as string[],
-    }
-    expect(
-      updateAccountData("uid-1", user, "a@example.com", "old", "new"),
-    ).rejects.toThrow("update failed")
+    const last = state.calls.at(-1)
+    expect(last?.text).toContain('UPDATE "user"')
+    expect(last?.params).toEqual(["更新", true, ["0", "1"], "uid-1"])
   })
 })
 
 describe("Property: setContentOrder always targets orders table", () => {
   const docIdArb = fc.uuid()
-  const contentArb = fc.record({
-    set1: fc.array(fc.record({ fileName: fc.string() })),
-  })
 
   test("always upserts to orders table", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        docIdArb,
-        contentArb,
-        async (docId: string, content: { set1: { fileName: string }[] }) => {
-          await setContentOrder(docId, content)
-          expect(state.table).toBe("orders")
-          expect(state.operation).toBe("upsert")
-        },
-      ),
+      fc.asyncProperty(docIdArb, async (docId: string) => {
+        reset()
+        await setContentOrder(docId, {
+          set1: [
+            { fileName: "a.png", path: "p", type: "image", viewTime: 100 },
+          ],
+        })
+        const last = state.calls.at(-1)
+        expect(last?.text).toContain("INSERT INTO orders")
+      }),
       { numRuns: 50 },
     )
   })

@@ -18,20 +18,15 @@ import {
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
+import type { ContentListItem, UserAccount } from "@/src/db/types"
 import {
   createAccountData,
   deleteAccountData,
   updateAccountData,
 } from "@/src/services/accounts"
-import {
-  getContentsDataClient,
-  mapContentToListItem,
-} from "@/src/services/contents"
+import { mapContentToListItem } from "@/src/services/content-helpers"
+import { getContentsDataClient } from "@/src/services/contents"
 import { getUserAccountList } from "@/src/services/users"
-import type {
-  ContentListItem,
-  UserAccount,
-} from "@/src/supabase/database.types"
 
 interface UserEditState {
   userName: string

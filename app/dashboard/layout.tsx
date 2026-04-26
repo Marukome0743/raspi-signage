@@ -1,32 +1,35 @@
+import { headers } from "next/headers"
 import Dashboard from "@/components/dashboard/Dashboard"
-import type { UserInfo } from "@/src/supabase/database.types"
-import { createClient } from "@/src/supabase/server"
+import { getAuth } from "@/src/auth/server"
+import { queryOne } from "@/src/db/client"
+import type { User, UserInfo } from "@/src/db/types"
 
 async function getUserInfo(): Promise<UserInfo | null> {
   try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
+    const session = await getAuth().api.getSession({
+      headers: await headers(),
+    })
+    const uid = session?.user?.id
+    if (!uid) {
       return null
     }
 
-    const { data } = await supabase
-      .from("users")
-      .select()
-      .eq("id", user.id)
-      .single()
+    const row = await queryOne<User>(
+      `SELECT id, email, name AS user_name, management, coverage_area, pass_flg, deleted
+         FROM "user"
+        WHERE id = $1`,
+      [uid],
+    )
 
-    if (!data || data.deleted) {
+    if (!row || row.deleted) {
       return null
     }
 
     return {
-      uid: user.id,
-      userName: data.user_name,
-      isAdmin: data.management,
-      coverageArea: data.coverage_area,
+      uid: row.id,
+      userName: row.user_name,
+      isAdmin: row.management,
+      coverageArea: row.coverage_area,
     }
   } catch {
     return null

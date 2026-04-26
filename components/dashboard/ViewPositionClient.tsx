@@ -5,8 +5,9 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
+import type { ContentItem, PixelSizeInfo } from "@/src/db/types"
+import { filterActiveDisplayItems } from "@/src/services/content-helpers"
 import {
-  filterActiveDisplayItems,
   getContentPixelSize,
   getContentPixelSizeId,
   getOrderById,
@@ -16,7 +17,6 @@ import {
   resetPixelSize,
   updateDisplayContent,
 } from "@/src/services/pixel-sizes"
-import type { ContentItem, PixelSizeInfo } from "@/src/supabase/database.types"
 
 interface DisplayContentItem extends ContentItem {
   delete?: boolean

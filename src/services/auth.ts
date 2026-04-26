@@ -1,92 +1,99 @@
-import { handleSupabaseError } from "@/src/services/errors"
-import { createClient } from "@/src/supabase/client"
-import type { AccountData, LoginData } from "@/src/supabase/database.types"
+"use server"
 
-// Login (auth -> use UID as document key)
-export const getAccountLoginData = async (
-  email: string,
-  password: string,
-): Promise<LoginData | null> => {
-  const supabase = createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.signInWithPassword({ email, password })
-  if (error || !user) {
-    return null
+import { queryOne } from "@/src/db/client"
+import type { AccountData, LoginData, User } from "@/src/db/types"
+import { handleDataError } from "@/src/services/errors"
+
+// Fetch the user profile after a successful Better Auth sign-in.
+// Returns null if the account has been soft-deleted.
+export async function getAccountLoginData(
+  uid: string,
+): Promise<LoginData | null> {
+  let row: User | null
+  try {
+    row = await queryOne<User>(
+      `SELECT id, email, name AS user_name, management, coverage_area, pass_flg, deleted
+         FROM "user"
+        WHERE id = $1`,
+      [uid],
+    )
+  } catch (e) {
+    handleDataError({
+      message: e instanceof Error ? e.message : "ユーザー取得に失敗しました",
+    })
   }
 
-  const uid = user.id
-  const { data, error: queryError } = await supabase
-    .from("users")
-    .select()
-    .eq("id", uid)
-    .single()
-  if (queryError) {
-    handleSupabaseError(queryError)
-  }
-  if (!data || data.deleted) {
+  if (!row || row.deleted) {
     return null
   }
   return {
-    uid,
-    email: data.email,
-    userName: data.user_name,
-    management: data.management,
-    coverageArea: data.coverage_area,
-    passFlg: data.pass_flg,
+    uid: row.id,
+    email: row.email,
+    userName: row.user_name,
+    management: row.management,
+    coverageArea: row.coverage_area,
+    passFlg: row.pass_flg,
   }
 }
 
 // Check password reset flag
-export const checkAccountPassKey = async (
+export async function checkAccountPassKey(
   email: string,
-): Promise<Omit<LoginData, "uid"> | null> => {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from("users")
-    .select()
-    .eq("deleted", false)
-    .eq("email", email)
-    .eq("pass_flg", true)
-    .limit(1)
-  if (error) {
-    handleSupabaseError(error)
+): Promise<Omit<LoginData, "uid"> | null> {
+  let row: User | null
+  try {
+    row = await queryOne<User>(
+      `SELECT id, email, name AS user_name, management, coverage_area, pass_flg, deleted
+         FROM "user"
+        WHERE deleted = false
+          AND email = $1
+          AND pass_flg = true
+        LIMIT 1`,
+      [email],
+    )
+  } catch (e) {
+    handleDataError({
+      message: e instanceof Error ? e.message : "ユーザー取得に失敗しました",
+    })
   }
-  if (!data || data.length === 0) {
+  if (!row) {
     return null
   }
   return {
-    email: data[0].email,
-    userName: data[0].user_name,
-    management: data[0].management,
-    coverageArea: data[0].coverage_area,
-    passFlg: data[0].pass_flg,
+    email: row.email,
+    userName: row.user_name,
+    management: row.management,
+    coverageArea: row.coverage_area,
+    passFlg: row.pass_flg,
   }
 }
 
 // Get a single account for account settings
-export const getAccountDataClient = async (
+export async function getAccountDataClient(
   uid: string,
-): Promise<AccountData | null> => {
-  const supabase = createClient()
-  const { data, error } = await supabase
-    .from("users")
-    .select()
-    .eq("id", uid)
-    .single()
-  if (error) {
-    handleSupabaseError(error)
+): Promise<AccountData | null> {
+  let row: User | null
+  try {
+    row = await queryOne<User>(
+      `SELECT id, email, name AS user_name, management, coverage_area, pass_flg, deleted
+         FROM "user"
+        WHERE id = $1`,
+      [uid],
+    )
+  } catch (e) {
+    handleDataError({
+      message: e instanceof Error ? e.message : "ユーザー取得に失敗しました",
+    })
   }
-  if (!data) {
+  if (!row) {
     return null
   }
   return {
-    email: data.email,
-    userName: data.user_name,
-    management: data.management,
-    coverageArea: data.coverage_area,
-    passFlg: data.pass_flg,
-    delete: data.deleted,
+    email: row.email,
+    userName: row.user_name,
+    management: row.management,
+    coverageArea: row.coverage_area,
+    passFlg: row.pass_flg,
+    delete: row.deleted,
   }
 }

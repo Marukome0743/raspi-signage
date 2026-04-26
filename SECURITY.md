@@ -30,22 +30,33 @@ Please do not open a public issue for security vulnerabilities.
 
 The following areas are in scope for security reports:
 
-- Authentication and session management (Supabase Auth)
-- Server-side rendering and data handling (Next.js App Router)
-- Database access and Row Level Security (Supabase / PostgreSQL)
+- Authentication and session management (Better Auth)
+- Server-side rendering and Server Actions (Next.js App Router)
+- Database access (Neon / Postgres) — query construction, parameter binding, and access control
+- Object storage access (Vercel Blob / RustFS) — public URL exposure and upload validation
 - Environment variable and secret management
 - Input validation and sanitization
 - Dependency vulnerabilities
 
 ### Out of scope
 
-- Issues in third-party services (e.g., Supabase hosted platform) that are not caused by this project's code
+- Issues in third-party services (e.g., Vercel, Neon, RustFS) that are not caused by this project's code
 - Denial of service attacks against development environments
 - Social engineering
 
 ## Security Best Practices for Contributors
 
-- Never commit `.env` files or secret keys to the repository
-- Use `src/supabase/server.ts` for server-side access and `src/supabase/client.ts` for client-side access
-- Do not expose `SUPABASE_SERVICE_ROLE_KEY` to the client — use only on the server
-- Replace personally identifiable information (PII) with generic placeholders in code examples
+- Never commit `.env` files or secret keys to the repository.
+- All database and storage access lives in `"use server"` files under
+  `src/services/`; never import `pg`, `@vercel/blob`, or `@aws-sdk/client-s3`
+  from client components.
+- Treat the following as secrets and provide them through environment variables:
+  - `DATABASE_URL` (Neon connection string in production)
+  - `BETTER_AUTH_SECRET` (must be a random 32+ byte secret in production)
+  - `BLOB_READ_WRITE_TOKEN` (Vercel Blob)
+  - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` (any non-Vercel storage)
+- Replace personally identifiable information (PII) with generic placeholders
+  in code examples and seed data.
+- Always parameterize SQL via `query` / `queryOne` / `queryRows` from
+  `src/db/client.ts`. Never build SQL by string concatenation with
+  user-supplied values.

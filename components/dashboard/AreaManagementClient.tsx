@@ -12,14 +12,14 @@ import {
 import { useEffect, useState } from "react"
 import ErrorDialog from "@/components/dashboard/ErrorDialog"
 import { useOrderContext } from "@/components/dashboard/OrderContext"
+import type { Content, ContentListItem } from "@/src/db/types"
+import { mapContentToListItem } from "@/src/services/content-helpers"
 import {
   createContentsData,
   deleteContentsData,
   getContentsDataClient,
-  mapContentToListItem,
   updateContentsData,
 } from "@/src/services/contents"
-import type { Content, ContentListItem } from "@/src/supabase/database.types"
 
 interface AreaManagementClientProps {
   initialData: Content[] | null

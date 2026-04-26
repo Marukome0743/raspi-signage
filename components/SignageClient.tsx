@@ -4,9 +4,9 @@ import { Grid } from "@mui/material"
 import Image from "next/image"
 import { useEffect, useReducer, useRef } from "react"
 import styles from "@/app/styles.module.css"
+import type { ContentItem } from "@/src/db/types"
 import { getContentPixelSize } from "@/src/services/contents"
 import { setContentPixelSize } from "@/src/services/pixel-sizes"
-import type { ContentItem } from "@/src/supabase/database.types"
 
 interface SignageDisplayState {
   height: number

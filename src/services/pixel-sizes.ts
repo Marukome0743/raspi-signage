@@ -1,41 +1,36 @@
-import { handleSupabaseError } from "@/src/services/errors"
-import { createClient } from "@/src/supabase/client"
-import type { PixelSizeInfo } from "@/src/supabase/database.types"
+"use server"
+
+import { query, queryOne } from "@/src/db/client"
+import type { PixelSize, PixelSizeInfo } from "@/src/db/types"
+import { handleDataError } from "@/src/services/errors"
 
 // Register or retrieve CSS pixel size for content
-export const setContentPixelSize = async (
+export async function setContentPixelSize(
   orderId: string,
   pixelSizeId: string,
   width: number,
   height: number,
-): Promise<PixelSizeInfo | null> => {
-  const supabase = createClient()
+): Promise<PixelSizeInfo | null> {
   if (pixelSizeId === "") {
-    const pixelSize = {
-      width,
-      height,
-      pixel_width: width,
-      pixel_height: height,
-      margin_top: 0,
-      margin_left: 0,
-      display_content_flg: true,
-      get_pixel_flg: false,
-    }
-    const { data: newPixel, error: insertError } = await supabase
-      .from("pixel_sizes")
-      .insert(pixelSize)
-      .select()
-      .single()
-    if (insertError) {
-      handleSupabaseError(insertError)
-    }
-
-    const { error: updateError } = await supabase
-      .from("contents")
-      .update({ pixel_size_id: newPixel?.id })
-      .eq("order_id", orderId)
-    if (updateError) {
-      handleSupabaseError(updateError)
+    let newPixel: { id: string } | null
+    try {
+      newPixel = await queryOne<{ id: string }>(
+        `INSERT INTO pixel_sizes
+              (width, height, pixel_width, pixel_height,
+               margin_top, margin_left, display_content_flg, get_pixel_flg)
+              VALUES ($1, $2, $1, $2, 0, 0, true, false)
+         RETURNING id`,
+        [width, height],
+      )
+      await query(
+        `UPDATE contents SET pixel_size_id = $1 WHERE order_id = $2`,
+        [newPixel?.id, orderId],
+      )
+    } catch (e) {
+      handleDataError({
+        message:
+          e instanceof Error ? e.message : "ピクセルサイズ登録に失敗しました",
+      })
     }
 
     return {
@@ -50,76 +45,77 @@ export const setContentPixelSize = async (
     }
   }
 
-  const { data, error } = await supabase
-    .from("pixel_sizes")
-    .select()
-    .eq("id", pixelSizeId)
-    .single()
-  if (error) {
-    handleSupabaseError(error)
+  let row: PixelSize | null
+  try {
+    row = await queryOne<PixelSize>(
+      `SELECT id, width, height, pixel_width, pixel_height,
+              margin_top, margin_left, display_content_flg, get_pixel_flg
+         FROM pixel_sizes
+        WHERE id = $1`,
+      [pixelSizeId],
+    )
+  } catch (e) {
+    handleDataError({
+      message:
+        e instanceof Error ? e.message : "ピクセルサイズ取得に失敗しました",
+    })
   }
-  if (!data) {
+  if (!row) {
     return null
   }
 
   const pixelSizeResult: PixelSizeInfo = {
-    width: data.width,
-    height: data.height,
-    pixelWidth: data.pixel_width,
-    pixelHeight: data.pixel_height,
-    marginTop: data.margin_top,
-    marginLeft: data.margin_left,
-    displayContentFlg: data.display_content_flg,
-    getPixelFlg: data.get_pixel_flg,
+    width: row.width,
+    height: row.height,
+    pixelWidth: row.pixel_width,
+    pixelHeight: row.pixel_height,
+    marginTop: row.margin_top,
+    marginLeft: row.margin_left,
+    displayContentFlg: row.display_content_flg,
+    getPixelFlg: row.get_pixel_flg,
   }
 
-  if (data.get_pixel_flg) {
-    const { error: updateError } = await supabase
-      .from("pixel_sizes")
-      .update({
-        pixel_width: width,
-        pixel_height: height,
-        get_pixel_flg: false,
+  if (row.get_pixel_flg) {
+    try {
+      await query(
+        `UPDATE pixel_sizes
+            SET pixel_width = $1, pixel_height = $2, get_pixel_flg = false
+          WHERE id = $3`,
+        [width, height, pixelSizeId],
+      )
+    } catch (e) {
+      handleDataError({
+        message:
+          e instanceof Error ? e.message : "ピクセルサイズ更新に失敗しました",
       })
-      .eq("id", pixelSizeId)
-    if (updateError) {
-      handleSupabaseError(updateError)
     }
   }
   return pixelSizeResult
 }
 
 // Initial setup for display adjustment screen
-export const createDisplayContent = async (
+export async function createDisplayContent(
   orderId: string,
   pixel: Pick<PixelSizeInfo, "pixelWidth" | "pixelHeight">,
-): Promise<PixelSizeInfo> => {
-  const supabase = createClient()
-  const pixelSize = {
-    width: 0,
-    height: 0,
-    pixel_width: pixel.pixelWidth,
-    pixel_height: pixel.pixelHeight,
-    margin_top: 0,
-    margin_left: 0,
-    display_content_flg: true,
-    get_pixel_flg: false,
-  }
-  const { data: newPixel, error: insertError } = await supabase
-    .from("pixel_sizes")
-    .insert(pixelSize)
-    .select()
-    .single()
-  if (insertError) {
-    handleSupabaseError(insertError)
-  }
-
-  const { error: updateError } = await supabase
-    .from("contents")
-    .update({ pixel_size_id: newPixel?.id })
-    .eq("order_id", orderId)
-  if (updateError) {
-    handleSupabaseError(updateError)
+): Promise<PixelSizeInfo> {
+  try {
+    const newPixel = await queryOne<{ id: string }>(
+      `INSERT INTO pixel_sizes
+              (width, height, pixel_width, pixel_height,
+               margin_top, margin_left, display_content_flg, get_pixel_flg)
+              VALUES (0, 0, $1, $2, 0, 0, true, false)
+         RETURNING id`,
+      [pixel.pixelWidth, pixel.pixelHeight],
+    )
+    await query(`UPDATE contents SET pixel_size_id = $1 WHERE order_id = $2`, [
+      newPixel?.id,
+      orderId,
+    ])
+  } catch (e) {
+    handleDataError({
+      message:
+        e instanceof Error ? e.message : "ピクセルサイズ登録に失敗しました",
+    })
   }
 
   return {
@@ -134,36 +130,38 @@ export const createDisplayContent = async (
 }
 
 // Update display adjustment parameters
-export const updateDisplayContent = async (
+export async function updateDisplayContent(
   pixelSizeId: string,
   height: number,
   width: number,
   marginTop: number,
   marginLeft: number,
-): Promise<void> => {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from("pixel_sizes")
-    .update({
-      height,
-      width,
-      margin_top: marginTop,
-      margin_left: marginLeft,
+): Promise<void> {
+  try {
+    await query(
+      `UPDATE pixel_sizes
+          SET height = $1, width = $2, margin_top = $3, margin_left = $4
+        WHERE id = $5`,
+      [height, width, marginTop, marginLeft, pixelSizeId],
+    )
+  } catch (e) {
+    handleDataError({
+      message:
+        e instanceof Error ? e.message : "ピクセルサイズ更新に失敗しました",
     })
-    .eq("id", pixelSizeId)
-  if (error) {
-    handleSupabaseError(error)
   }
 }
 
 // Unlock CSS pixel size for re-acquisition on Raspberry Pi signage display
-export const resetPixelSize = async (pixelSizeId: string): Promise<void> => {
-  const supabase = createClient()
-  const { error } = await supabase
-    .from("pixel_sizes")
-    .update({ get_pixel_flg: true })
-    .eq("id", pixelSizeId)
-  if (error) {
-    handleSupabaseError(error)
+export async function resetPixelSize(pixelSizeId: string): Promise<void> {
+  try {
+    await query(`UPDATE pixel_sizes SET get_pixel_flg = true WHERE id = $1`, [
+      pixelSizeId,
+    ])
+  } catch (e) {
+    handleDataError({
+      message:
+        e instanceof Error ? e.message : "ピクセルサイズリセットに失敗しました",
+    })
   }
 }

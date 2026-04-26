@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState } from "react"
-import type { OrderContextValue } from "@/src/supabase/database.types"
+import type { OrderContextValue } from "@/src/db/types"
 
 const OrderContext = createContext<OrderContextValue | undefined>(undefined)
 

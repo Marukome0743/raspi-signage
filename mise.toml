@@ -2,7 +2,6 @@
 bun = "latest"
 markdownlint-cli2 = "latest"
 pitchfork = "latest"
-supabase = "latest"
 
 [tasks.lint]
 run = ["bun lint:fix --unsafe", "mise lint:md"]
@@ -11,9 +10,29 @@ run = ["bun lint:fix --unsafe", "mise lint:md"]
 description = "Check markdown files for linting issues"
 run = "markdownlint-cli2 '**/*.md'"
 
-[tasks."supabase:env"]
-description = "Generate .env from running Supabase instance"
-run = 'bun scripts/supabase-env.ts'
+[tasks."local:env"]
+description = "Generate .env for local Postgres + RustFS"
+run = "bun scripts/local-env.ts"
+
+[tasks."local:up"]
+description = "Start local Postgres + RustFS via docker compose"
+run = "docker compose up -d"
+
+[tasks."local:down"]
+description = "Stop local Postgres + RustFS containers"
+run = "docker compose down"
+
+[tasks."db:migrate"]
+description = "Apply src/db/schema.sql to the configured database"
+run = "bun scripts/db-migrate.ts"
+
+[tasks."db:seed"]
+description = "Seed accounts (via Better Auth) and signage data"
+run = "bun scripts/db-seed.ts"
+
+[tasks."db:reset"]
+description = "Re-apply schema, ensure bucket, and re-seed (truncates app tables)"
+run = "bun scripts/db-bootstrap.ts"
 
 [tasks.update]
 description = "Update bun dependencies and reinstall with isolated linker"

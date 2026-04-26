@@ -1,7 +1,13 @@
-import { createServerClient } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
 
 export const PUBLIC_PATHS = ["/dashboard/login", "/dashboard/password-reset"]
+
+const SESSION_COOKIE_NAMES = [
+  "raspi-signage.session_token",
+  "raspi-signage.session_token.0",
+  "__Secure-raspi-signage.session_token",
+  "__Secure-raspi-signage.session_token.0",
+]
 
 export type RoutingDecision =
   | { action: "pass" }
@@ -27,48 +33,25 @@ export function getRoutingDecision(
 }
 
 export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value } of cookiesToSet) {
-            request.cookies.set(name, value)
-          }
-          supabaseResponse = NextResponse.next({ request })
-          for (const { name, value, options } of cookiesToSet) {
-            supabaseResponse.cookies.set(name, value, options)
-          }
-        },
-      },
-    },
+  const hasSession = SESSION_COOKIE_NAMES.some((name) =>
+    request.cookies.has(name),
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const decision = getRoutingDecision(request.nextUrl.pathname, !!user)
+  const decision = getRoutingDecision(request.nextUrl.pathname, hasSession)
 
   if (decision.action === "redirect") {
     const redirectUrl = new URL(decision.destination, request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  return supabaseResponse
+  return NextResponse.next({ request })
 }
 
 export const matcherPattern =
-  "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
+  "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }
