@@ -1,12 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import * as fc from "fast-check"
-
-// Inline the pure function to avoid importing supabase-dependent module
-function filterActiveDisplayItems<T extends { delete?: boolean }>(
-  items: T[],
-): T[] {
-  return items.filter((item) => !item.delete && Object.keys(item).length > 0)
-}
+import { filterActiveDisplayItems } from "@/src/services/content-helpers"
 
 describe("Property 6: DisplayContentItem filtering accuracy", () => {
   test("result never contains deleted items or empty objects", () => {

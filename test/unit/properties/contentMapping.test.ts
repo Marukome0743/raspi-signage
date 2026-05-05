@@ -1,17 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import * as fc from "fast-check"
-import type { Content, ContentListItem } from "@/src/db/types"
-
-// Inline the pure function to avoid importing supabase-dependent module
-function mapContentToListItem(content: Content): ContentListItem {
-  return {
-    areaId: content.area_id,
-    areaName: content.area_name,
-    orderId: content.order_id,
-    pixelSizeId: content.pixel_size_id,
-    delete: content.deleted,
-  }
-}
+import { mapContentToListItem } from "@/src/services/content-helpers"
 
 describe("Property 5: Content to ContentListItem mapping consistency", () => {
   test("for any Content, mapping preserves all field values", () => {
