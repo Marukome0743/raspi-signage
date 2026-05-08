@@ -1,0 +1,12 @@
+[global]
+respect_gitignore = true
+include = ["**/*.md"]
+exclude = [
+    ".github/pull_request_template.md",
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "README.md",
+]
+
+[MD013]
+line_length = 120
