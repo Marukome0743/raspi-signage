@@ -25,8 +25,6 @@ interface SnackbarStatus {
 }
 
 export default function LoginPage(): React.JSX.Element {
-  const [email, setEmail] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
   const [status, setStatus] = useState<SnackbarStatus>({
     open: false,
     type: "",
@@ -49,11 +47,17 @@ export default function LoginPage(): React.JSX.Element {
     setStatus({ ...status, open: false })
   }
 
-  // Handle form submission
+  // Handle form submission. Read directly from the submitted form's DOM
+  // values rather than from React state — controlled-input state can lag
+  // behind synthetic input events on WebKit + Playwright `page.fill`,
+  // which would otherwise let an empty `email` slip past validation.
   const onSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get("email") ?? "")
+    const password = String(formData.get("password") ?? "")
     const regex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,}$/
     const isValidEmail = regex.test(email)
     if (!isValidEmail) {
@@ -127,9 +131,6 @@ export default function LoginPage(): React.JSX.Element {
               label="メールアドレス"
               name="email"
               autoComplete="email"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEmail(e.target.value)
-              }
               autoFocus
             />
             <TextField
@@ -141,9 +142,6 @@ export default function LoginPage(): React.JSX.Element {
               type="password"
               id="password"
               autoComplete="current-password"
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setPassword(e.target.value)
-              }
             />
             <Button
               type="submit"
