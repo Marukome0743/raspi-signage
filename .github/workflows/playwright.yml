@@ -39,6 +39,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
     env:
       DATABASE_URL: postgres://raspi:raspi@127.0.0.1:54322/raspi_signage
       BETTER_AUTH_SECRET: ci-better-auth-secret-not-for-production
@@ -76,16 +81,16 @@ jobs:
         run: bun scripts/db-bootstrap.ts
 
       - name: 🎭 Install Playwright Browsers
-        run: bun playwright install --with-deps
+        run: bun playwright install --with-deps ${{ matrix.browser }}
 
       - name: 🧪 Run Playwright tests
-        run: bun playwright test
+        run: bun playwright test --project=${{ matrix.browser }}
 
       - name: 🆙 Upload Test Report
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 30
 
