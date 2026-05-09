@@ -1,14 +1,18 @@
 [tools]
 bun = "latest"
-markdownlint-cli2 = "latest"
+rumdl = "latest"
 pitchfork = "latest"
 
 [tasks.lint]
 run = ["bun lint:fix --unsafe", "mise lint:md"]
 
 [tasks."lint:md"]
-description = "Check markdown files for linting issues"
-run = "markdownlint-cli2 '**/*.md'"
+description = "Check and fix markdown files with rumdl"
+run = "rumdl check --fix ."
+
+[tasks."fmt:md"]
+description = "Format markdown files with rumdl"
+run = "rumdl fmt ."
 
 [tasks."local:env"]
 description = "Generate .env for local Postgres + RustFS"
