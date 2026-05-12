@@ -28,7 +28,7 @@
     "@mui/material": "^9.0.1",
     "@mui/material-nextjs": "^9.0.1",
     "@vercel/blob": "^2.3.3",
-    "better-auth": "^1.6.10",
+    "better-auth": "^1.6.11",
     "next": "^16.2.6",
     "pg": "^8.20.0",
     "react": "^19.2.6",
