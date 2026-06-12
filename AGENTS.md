@@ -39,6 +39,18 @@ bun run test:e2e          # E2E tests (Playwright)
 - Test files are located in `test/unit/` and `test/e2e/`
 - Do not add or modify tests unless explicitly requested
 
+### Test mocks
+
+- `bun:test`'s `mock.module` is **process-global**, and on `bun-version: canary` the *first*
+  registration's object shape fixes a module's exported-name set for the whole run. A mock that
+  omits an export makes any later file's static `import { thatExport }` fail to LINK
+  (`SyntaxError: Export named '…' not found`). Never register a partial module shape.
+- Build the shared global mocks via the typed factories under `test/mocks/`
+  (`db-client.ts`, `auth-guard.ts`, `storage.ts`). Their `typeof import("@/src/…")` return type
+  turns a missing export into a compile error, so the registry's name set stays complete regardless
+  of file order. Mock the `@/src/…` alias only (the alias and a relative specifier resolve to the
+  same module key).
+
 ## Code style
 
 - Linting and formatting managed by Biome

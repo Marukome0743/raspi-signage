@@ -1,4 +1,6 @@
-import { describe, expect, mock, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
+import { mockGuard } from "../../mocks/auth-guard"
+import { mockStorage } from "../../mocks/storage"
 
 interface State {
   listResult: { key: string; url: string }[]
@@ -10,30 +12,15 @@ const state: State = {
   listError: null,
 }
 
-mock.module("../../../src/storage", () => ({
-  getStorage: () => ({
-    upload: async () => ({ key: "", url: "" }),
-    list: async () => {
-      if (state.listError) {
-        throw state.listError
-      }
-      return state.listResult
-    },
-  }),
-}))
-
-const fakeSession = {
-  user: { id: "test-uid", email: "test@example.com" },
-}
-const guardMock = {
-  requireSession: async () => fakeSession,
-  requireAdmin: async () => fakeSession,
-  requireSelfOrAdmin: async () => fakeSession,
-  requireSelf: async () => fakeSession,
-  requireEmail: async () => fakeSession,
-}
-mock.module("../../../src/auth/guard", () => guardMock)
-mock.module("@/src/auth/guard", () => guardMock)
+mockStorage({
+  list: async () => {
+    if (state.listError) {
+      throw state.listError
+    }
+    return state.listResult
+  },
+})
+mockGuard()
 
 const { downLoadURLList } = await import("../../../src/services/download")
 

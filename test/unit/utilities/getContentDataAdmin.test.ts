@@ -1,5 +1,6 @@
-import { describe, expect, mock, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fc from "fast-check"
+import { mockDbClient } from "../../mocks/db-client"
 
 interface QueryRecorder {
   text: string | null
@@ -13,7 +14,7 @@ const state: QueryRecorder = {
   result: { rows: [] },
 }
 
-mock.module("../../../src/db/client", () => ({
+mockDbClient({
   query: async (text: string, params?: unknown[]) => {
     state.text = text
     state.params = params ?? null
@@ -29,7 +30,7 @@ mock.module("../../../src/db/client", () => ({
     state.params = params ?? null
     return state.result.rows[0] ?? null
   },
-}))
+})
 
 const { getContentDataAdmin, getOrderIdAdmin } = await import(
   "../../../src/services/contents-admin"

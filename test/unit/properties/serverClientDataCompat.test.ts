@@ -1,5 +1,7 @@
-import { describe, expect, mock, test } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import * as fc from "fast-check"
+import { mockGuard } from "../../mocks/auth-guard"
+import { mockDbClient } from "../../mocks/db-client"
 
 interface State {
   rows: Record<string, unknown>[]
@@ -28,21 +30,8 @@ const dbMock = {
   ) => fn({ query: async () => ({ rows: state.rows }) }),
 }
 
-mock.module("../../../src/db/client", () => dbMock)
-mock.module("@/src/db/client", () => dbMock)
-
-const fakeSession = {
-  user: { id: "test-uid", email: "test@example.com" },
-}
-const guardMock = {
-  requireSession: async () => fakeSession,
-  requireAdmin: async () => fakeSession,
-  requireSelfOrAdmin: async () => fakeSession,
-  requireSelf: async () => fakeSession,
-  requireEmail: async () => fakeSession,
-}
-mock.module("../../../src/auth/guard", () => guardMock)
-mock.module("@/src/auth/guard", () => guardMock)
+mockDbClient(dbMock)
+mockGuard()
 
 const { getContentsDataClient, getContentList, getOrderById } = await import(
   "../../../src/services/contents"

@@ -1,4 +1,7 @@
 import { describe, expect, mock, test } from "bun:test"
+import { mockGuard } from "../../mocks/auth-guard"
+import { mockDbClient } from "../../mocks/db-client"
+import { mockStorage } from "../../mocks/storage"
 
 interface State {
   contentsRow: Record<string, unknown> | null
@@ -16,7 +19,7 @@ const state: State = {
   updateContentOrderCalls: [],
 }
 
-mock.module("../../../src/db/client", () => ({
+mockDbClient({
   queryOne: async (text: string) => {
     if (text.includes("FROM contents")) {
       return state.contentsRow
@@ -26,30 +29,20 @@ mock.module("../../../src/db/client", () => ({
     }
     return null
   },
-  query: async () => ({ rows: [] }),
-  queryRows: async () => [],
-  withTransaction: async <T>(
-    fn: (client: {
-      query: (text: string) => Promise<{ rows: Record<string, unknown>[] }>
-    }) => Promise<T>,
-  ) => fn({ query: async () => ({ rows: [] }) }),
-}))
+})
 
-mock.module("../../../src/storage", () => ({
-  getStorage: () => ({
-    upload: async (prefix: string, fileName: string) => {
-      state.uploadCalls.push({ prefix, fileName })
-      if (state.uploadError) {
-        throw state.uploadError
-      }
-      return {
-        key: `${prefix}/${fileName}`,
-        url: `http://localhost:9000/signage-contents/${prefix}/${fileName}`,
-      }
-    },
-    list: async () => [],
-  }),
-}))
+mockStorage({
+  upload: async (prefix: string, fileName: string) => {
+    state.uploadCalls.push({ prefix, fileName })
+    if (state.uploadError) {
+      throw state.uploadError
+    }
+    return {
+      key: `${prefix}/${fileName}`,
+      url: `http://localhost:9000/signage-contents/${prefix}/${fileName}`,
+    }
+  },
+})
 
 mock.module("../../../src/services/contents", () => ({
   updateContentOrder: async (
@@ -60,18 +53,7 @@ mock.module("../../../src/services/contents", () => ({
   },
 }))
 
-const fakeSession = {
-  user: { id: "test-uid", email: "test@example.com" },
-}
-const guardMock = {
-  requireSession: async () => fakeSession,
-  requireAdmin: async () => fakeSession,
-  requireSelfOrAdmin: async () => fakeSession,
-  requireSelf: async () => fakeSession,
-  requireEmail: async () => fakeSession,
-}
-mock.module("../../../src/auth/guard", () => guardMock)
-mock.module("@/src/auth/guard", () => guardMock)
+mockGuard()
 
 const { postContent } = await import("../../../src/services/upload")
 
