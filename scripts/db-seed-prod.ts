@@ -148,13 +148,18 @@ async function truncateAll() {
 }
 
 async function seedAdmin() {
+  const email = process.env.SEED_ADMIN_EMAIL
+  const password = process.env.SEED_ADMIN_PASSWORD
+  const name = process.env.SEED_ADMIN_NAME
+  if (!email || !password || !name) {
+    throw new Error(
+      "SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD / SEED_ADMIN_NAME must be set",
+    )
+  }
+
   const auth = getAuth()
   const result = await auth.api.signUpEmail({
-    body: {
-      email: process.env.SEED_ADMIN_EMAIL!,
-      password: process.env.SEED_ADMIN_PASSWORD!,
-      name: process.env.SEED_ADMIN_NAME!,
-    },
+    body: { email, password, name },
   })
   const uid = result.user.id
   await pool.query(
