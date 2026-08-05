@@ -7,6 +7,11 @@
     "defaultBranch": "main"
   },
   "linter": {
+    "domains": {
+      "next": "recommended",
+      "react": "recommended",
+      "test": "recommended"
+    },
     "rules": {
       "correctness": {
         "noNestedComponentDefinitions": "off",
@@ -30,11 +35,6 @@
   "json": {
     "formatter": {
       "indentStyle": "space"
-    }
-  },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
     }
   }
 }
