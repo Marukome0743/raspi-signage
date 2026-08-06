@@ -131,5 +131,5 @@ mise run db:seed       # truncate + reseed via Better Auth
 mise run db:reset      # migrate + ensure bucket + seed
 bun run test:unit      # bun test (happy-dom)
 bun run test:e2e       # Playwright E2E
-bun run lint           # Biome
+bun run fix            # Biome check (auto-fix)
 ```

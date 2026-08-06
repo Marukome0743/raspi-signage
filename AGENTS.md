@@ -60,9 +60,8 @@ bun run test:e2e          # E2E tests (Playwright)
 - Path alias: `@/*` → project root
 
 ```bash
-bun run lint              # Lint check
-bun run lint:fix          # Auto-fix
-bun run format            # Format
+bun run check             # Biome check (read-only)
+bun run fix               # Biome check (auto-fix)
 ```
 
 ## Project structure
@@ -91,7 +90,7 @@ test/                     # Tests (unit/, e2e/)
 - Better Auth client (`signIn`, `signOut`, `signUp`, `changePassword`) is
   used directly in client pages; server-side session checks use
   `getAuth().api.getSession({ headers })` from `src/auth/server.ts`.
-- Run `bun run lint` before committing.
+- Run `bun run fix` before committing.
 
 ## Security
 
