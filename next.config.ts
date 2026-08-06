@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   experimental: {
     inlineCss: true,
   },
-  output: "standalone",
   reactCompiler: true,
   typedRoutes: true,
   images: {
