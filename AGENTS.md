@@ -23,7 +23,6 @@ Digital signage system for Raspberry Pi. Built with Next.js 16 (App Router) + Ty
 ```bash
 mise install              # Install tools (bun etc.)
 mise run local:up         # Start local Postgres + RustFS via docker compose
-mise run local:env        # Generate .env for local development
 mise run db:reset         # Apply schema + ensure bucket + seed via Better Auth
 bun install
 bun dev                   # http://localhost:3000
@@ -76,7 +75,7 @@ src/auth/                 # Better Auth server config + browser client
 src/db/                   # pg Pool, schema.sql, domain types
 src/storage/              # Storage abstraction + Vercel Blob / S3 adapters
 src/services/             # Server Actions + pure helpers (content-helpers.ts)
-scripts/                  # db-bootstrap, db-migrate, db-seed, local-env
+scripts/                  # db-bootstrap, db-migrate, db-seed
 docker-compose.yml        # Local Postgres + RustFS
 test/                     # Tests (unit/, e2e/)
 ```
@@ -96,5 +95,10 @@ test/                     # Tests (unit/, e2e/)
 
 - Never hardcode secret keys or API keys in source code.
 - `BETTER_AUTH_SECRET`, `DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`, and
-  `S3_*` credentials must come from environment variables.
+  `S3_*` credentials must come from environment variables. The local
+  development values are in `mise.toml`'s `[env]`; real secrets go in the
+  gitignored `mise.local.toml`.
+- Entries in `[env]` must use `{{ env.NAME | default(value='...') }}`. A bare
+  `NAME = "value"` overwrites the parent environment, which would replace a
+  CI workflow's `env:` block or a deployment's real configuration.
 - Replace PII with placeholders. See `SECURITY.md`.

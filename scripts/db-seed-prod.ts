@@ -11,7 +11,12 @@
 //   SEED_ADMIN_PASSWORD       Admin password
 //   SEED_ADMIN_NAME           Admin display name
 //
-// Run: bun --env-file=.env.production.local scripts/db-seed-prod.ts
+// Run: set -a && . ./.env.production.local && set +a && bun scripts/db-seed-prod.ts
+//
+// Source the file rather than passing `--env-file`: mise.toml's [env]
+// exports the local development defaults into every shell opened inside
+// this repository, and `bun --env-file` keeps an already-set variable
+// instead of replacing it. The guard below refuses to run against them.
 
 import { Pool } from "pg"
 import { getAuth } from "../src/auth/server"
@@ -34,6 +39,27 @@ for (const key of REQUIRED) {
 }
 if (process.env.STORAGE_PROVIDER !== "vercel-blob") {
   console.error("STORAGE_PROVIDER must be 'vercel-blob' for production seed")
+  process.exit(1)
+}
+
+// Refuse to run against the local development values from mise.toml's [env].
+// Seeding production data into the local Postgres is recoverable; the reverse
+// assumption -- believing production was seeded when it was not -- is not.
+const LOCAL_DB_MARKERS = ["127.0.0.1", "localhost", "raspi:raspi"]
+const databaseUrl = process.env.DATABASE_URL ?? ""
+if (LOCAL_DB_MARKERS.some((marker) => databaseUrl.includes(marker))) {
+  console.error(
+    "DATABASE_URL points at the local development database. Export the production values before running this script.",
+  )
+  process.exit(1)
+}
+if (
+  process.env.BETTER_AUTH_SECRET ===
+  "raspi-signage-development-secret-change-me"
+) {
+  console.error(
+    "BETTER_AUTH_SECRET is still the development placeholder. Export the production values before running this script.",
+  )
   process.exit(1)
 }
 

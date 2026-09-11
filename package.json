@@ -12,8 +12,7 @@
     "test:e2e": "playwright test",
     "db:bootstrap": "bun scripts/db-bootstrap.ts",
     "db:migrate": "bun scripts/db-migrate.ts",
-    "db:seed": "bun scripts/db-seed.ts",
-    "local:env": "bun scripts/local-env.ts"
+    "db:seed": "bun scripts/db-seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
