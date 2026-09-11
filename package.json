@@ -10,7 +10,6 @@
     "fix": "biome check --write",
     "test:unit": "bun test test/unit --preload ./happydom.ts --isolate --randomize",
     "test:e2e": "playwright test",
-    "db:bootstrap": "bun scripts/db-bootstrap.ts",
     "db:migrate": "bun scripts/db-migrate.ts",
     "db:seed": "bun scripts/db-seed.ts"
   },

@@ -75,7 +75,7 @@ src/auth/                 # Better Auth server config + browser client
 src/db/                   # pg Pool, schema.sql, domain types
 src/storage/              # Storage abstraction + Vercel Blob / S3 adapters
 src/services/             # Server Actions + pure helpers (content-helpers.ts)
-scripts/                  # db-bootstrap, db-migrate, db-seed
+scripts/                  # db-migrate, ensure-bucket, db-seed
 docker-compose.yml        # Local Postgres + RustFS
 test/                     # Tests (unit/, e2e/)
 ```
