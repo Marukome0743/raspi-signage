@@ -56,7 +56,13 @@ run = "bun scripts/db-seed.ts"
 
 [tasks."db:reset"]
 description = "Re-apply schema, ensure bucket, and re-seed (truncates app tables)"
-run = "bun scripts/db-bootstrap.ts"
+# Each step runs with the [env] table above applied, so the scripts read
+# DATABASE_URL and the S3 settings straight from it.
+run = [
+  "bun scripts/db-migrate.ts",
+  "bun scripts/ensure-bucket.ts",
+  "bun scripts/db-seed.ts",
+]
 
 [tasks.update]
 description = "Update bun dependencies and reinstall"
