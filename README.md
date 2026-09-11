@@ -54,13 +54,20 @@ mise run local:up
 `local:up` starts a Postgres container on `localhost:54322` and a RustFS
 (S3-compatible) container on `localhost:9000` (console: `localhost:9001`).
 
-### 2. Configure environment variables
+### 2. Environment variables
+
+The local development values live in the `[env]` table of `mise.toml`, and mise
+exports them into every shell opened inside the repository. That requires mise's
+shell integration, which is also what puts `bun` on `PATH`. If `mise doctor`
+reports it as missing, enable it once:
 
 ```bash
-mise run local:env
+echo 'eval "$(mise activate bash)"' >> ~/.bashrc && exec bash
 ```
 
-This writes the local development values into `.env`:
+See [activate](https://mise.jdx.dev/cli/activate.html) for zsh, fish, and
+friends. With it in place there is nothing to run, and `bun dev` and the
+database commands below pick the values up on their own:
 
 | Variable | Local default |
 | --- | --- |
@@ -73,7 +80,25 @@ This writes the local development values into `.env`:
 | `S3_BUCKET` | `signage-contents` |
 | `S3_PUBLIC_BASE_URL` | `http://127.0.0.1:9000/signage-contents` |
 
-> **Note:** `.env` is included in `.gitignore`. Do not commit secrets.
+Each entry is written as `{{ env.NAME | default(value='...') }}`, so a value
+that is already exported wins and the default only fills in the blanks. That
+keeps the table inert wherever real configuration exists: CI passes its own
+`env:` block, and Vercel builds never read `mise.toml` at all.
+
+Secrets and personal overrides (`BLOB_READ_WRITE_TOKEN`, `SEED_ADMIN_*`, a
+different port) go in `mise.local.toml`, which is gitignored and takes
+precedence over `mise.toml`:
+
+```toml
+[env]
+BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_..."
+```
+
+> **Note:** `mise.local.toml` and `.env*` are both in `.gitignore`. Do not
+> commit secrets.
+
+To run a one-off command without the shell integration, `mise exec -- <cmd>`
+applies the same values.
 
 In production, set `DATABASE_URL` to your Neon connection string,
 `STORAGE_PROVIDER=vercel-blob`, and provide `BLOB_READ_WRITE_TOKEN` from the
@@ -125,7 +150,6 @@ Open <http://localhost:3000/dashboard/login> to access the dashboard.
 ```bash
 mise run local:up      # start Postgres + RustFS containers
 mise run local:down    # stop containers (data persists in volumes)
-mise run local:env     # regenerate .env with local defaults
 mise run db:migrate    # apply src/db/schema.sql
 mise run db:seed       # truncate + reseed via Better Auth
 mise run db:reset      # migrate + ensure bucket + seed
