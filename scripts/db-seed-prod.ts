@@ -11,7 +11,12 @@
 //   SEED_ADMIN_PASSWORD       Admin password
 //   SEED_ADMIN_NAME           Admin display name
 //
-// Run: bun --env-file=.env.production.local scripts/db-seed-prod.ts
+// Run: set -a && . ./.env.production.local && set +a && bun scripts/db-seed-prod.ts
+//
+// Source the file rather than passing `--env-file`: mise.toml's [env]
+// exports the local development defaults into every shell opened inside
+// this repository, and `bun --env-file` keeps an already-set variable
+// instead of replacing it. The guard below refuses to run against them.
 
 import { Pool } from "pg"
 import { getAuth } from "../src/auth/server"
@@ -34,6 +39,56 @@ for (const key of REQUIRED) {
 }
 if (process.env.STORAGE_PROVIDER !== "vercel-blob") {
   console.error("STORAGE_PROVIDER must be 'vercel-blob' for production seed")
+  process.exit(1)
+}
+
+// Refuse to run against the local development values from mise.toml's [env].
+// Seeding production data into the local Postgres is recoverable; the reverse
+// assumption -- believing production was seeded when it was not -- is not.
+// `truncateAll()` runs before any insert, so a wrong target is destructive.
+function isLoopbackHost(host: string): boolean {
+  // `URL` brackets IPv6 literals and compresses them, so "::ffff:127.0.0.1"
+  // arrives as "[::ffff:7f00:1]" and "0:0:0:0:0:0:0:1" as "[::1]".
+  const bare = host.replace(/^\[|\]$/g, "").toLowerCase()
+  if (bare === "localhost" || bare.endsWith(".localhost")) {
+    return true
+  }
+  if (bare === "::1" || bare === "::") {
+    return true
+  }
+  const ipv4Mapped = bare.match(/^::ffff:([0-9a-f]{1,4}):[0-9a-f]{1,4}$/)
+  if (ipv4Mapped) {
+    // The captured group holds the top two octets, so 0x7f00-0x7fff is
+    // 127.0.0.0/8 and 0x0000-0x00ff is 0.0.0.0/8.
+    const topOctets = Number.parseInt(ipv4Mapped[1] ?? "", 16)
+    return topOctets >>> 8 === 127 || topOctets >>> 8 === 0
+  }
+  return bare === "0.0.0.0" || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(bare)
+}
+
+let databaseHost: string
+try {
+  databaseHost = new URL(process.env.DATABASE_URL ?? "").hostname
+} catch {
+  // A connection string this script cannot inspect is one it cannot vouch for.
+  console.error(
+    "DATABASE_URL is not a URL this script can verify. Use a postgres:// URL so the production target can be checked.",
+  )
+  process.exit(1)
+}
+if (isLoopbackHost(databaseHost)) {
+  console.error(
+    `DATABASE_URL points at a local database (${databaseHost}). Export the production values before running this script.`,
+  )
+  process.exit(1)
+}
+if (
+  process.env.BETTER_AUTH_SECRET ===
+  "raspi-signage-development-secret-change-me"
+) {
+  console.error(
+    "BETTER_AUTH_SECRET is still the development placeholder. Export the production values before running this script.",
+  )
   process.exit(1)
 }
 

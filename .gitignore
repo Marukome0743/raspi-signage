@@ -37,6 +37,7 @@ yarn-error.log*
 
 # local env files
 .env*
+mise.local.toml
 
 # vercel
 .vercel
