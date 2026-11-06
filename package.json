@@ -9,7 +9,7 @@
     "check": "biome check",
     "fix": "biome check --write",
     "test:unit": "bun test test/unit --preload ./happydom.ts --isolate --randomize",
-    "test:e2e": "playwright test",
+    "test:e2e": "bun --bun playwright test",
     "db:migrate": "bun mise-tasks/db/migrate.ts",
     "db:seed": "bun mise-tasks/db/seed.ts"
   },

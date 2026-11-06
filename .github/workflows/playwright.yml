@@ -74,11 +74,15 @@ jobs:
           mise run local:provision
           bun mise-tasks/db/seed.ts
 
+      # `playwright.config.ts` runs `bun start` on CI, so build the app first.
+      - name: 🧩 Build app
+        run: bun run build
+
       - name: 🎭 Install Playwright Browsers
         run: bun playwright install --with-deps ${{ matrix.browser }}
 
       - name: 🧪 Run Playwright tests
-        run: bun playwright test --project="${{ matrix.project }}"
+        run: bun --bun playwright test --project="${{ matrix.project }}"
 
       - name: 🆙 Upload Test Report
         uses: actions/upload-artifact@v7

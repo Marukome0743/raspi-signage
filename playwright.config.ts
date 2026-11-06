@@ -42,7 +42,10 @@ const config: PlaywrightTestConfig = {
         },
       ],
   webServer: {
-    command: "bun dev",
+    // CI serves the production build. Under `bun --bun playwright test` the
+    // web server inherits Bun as `node`, and Bun cannot load the external
+    // `pg-<hash>` symlinks that `next dev` (Turbopack) creates at runtime.
+    command: process.env.CI ? "bun start" : "bun dev",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
   },
